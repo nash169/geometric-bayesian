@@ -25,14 +25,15 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         "jax",
+        "numpy",
+        "flax",
+        "matplotlib",
+        "jaxtyping",
     ],
     extras_require={
-        "jax": [
-            "numpy",
-            "matplotlib",
-        ],
         "dev": [
             "pylint",
+            "jupyter",
         ]
     },
 )
