@@ -3,5 +3,6 @@
 
 from geometric_bayesian.densities.normal import Normal
 from geometric_bayesian.densities.multivariate_normal import MultivariateNormal
+from geometric_bayesian.densities.bernoulli import Bernoulli
 
-__all__ = ["Normal", "MultivariateNormal"]
+__all__ = ["Normal", "MultivariateNormal", "Bernoulli"]
