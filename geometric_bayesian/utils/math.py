@@ -21,6 +21,9 @@ def hvp_2(
         return jax.jvp(jax.jacrev(f), (x,), (v,))[1]
     return fn
 
+# def hvp(func: Callable, primals, tangents):
+#     return jax.jvp(jax.grad(func), (primals,), (tangents,))[1]
+
 
 def pullback(
     f: Callable,
