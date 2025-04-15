@@ -5,56 +5,70 @@ import math
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Int, Scalar, Vector
+from geometric_bayesian.utils.types import Int, Scalar, Vector, Optional, Tuple
 
 
 class Bernoulli:
     def __init__(
         self,
         mu: Scalar,
+        logits: Optional[bool] = True
     ) -> None:
         r"""
         Define categorical distribution.
         """
-        # assert (mu <= 1.0)
-        self._mu = mu
+        self._mu, self._logits = mu, logits
 
     def __call__(
         self,
         x: Scalar
     ) -> Scalar:
-        return self._mu[x]
+        return jnp.power(self._mu, x)*jnp.power(1-self._mu, 1-x)
 
-    def _logpdf(
+    def _log(
         self,
         x: Scalar
     ) -> Scalar:
-        return x*jnp.log(self._mu) + (1-x)*jnp.log(1-self._mu)
+        log_mu = jax.nn.log_sigmoid(self._mu) if self._logits else jnp.log(self._mu)
+        log_not_mu = jax.nn.log_sigmoid(-self._mu) if self._logits else jnp.log(1-self._mu)
+        return x*log_mu + (1-x)*log_not_mu
 
-    def _logpdf_jvp(
+    def _jvp(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
-        return 0
+        log_mu = jax.nn.log_sigmoid(self._mu) if self._logits else jnp.log(self._mu)
+        log_not_mu = jax.nn.log_sigmoid(-self._mu) if self._logits else jnp.log(1-self._mu)
+        return (log_mu - log_not_mu)*v
 
-    def _logpdf_hvp(
+    def _hvp(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
-        return 0
+        return jnp.array(0.0)
 
-    def _logpdf_jvp_params(
+    def _jvp_mu(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
         return (x/self._mu - (1-x)/(1-self._mu))*v
 
-    def _logpdf_hvp_params(
+    def _jvp_params(
+        self,
+    ) -> Tuple:
+        return (lambda x, v, : self._jvp_mu(x, v),)
+
+    def _hvp_mu(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
         return -(x*jnp.power(self._mu, -2) + (1-x)*jnp.power(1-self._mu, 2))*v
+
+    def _hvp_params(
+        self,
+    ) -> Tuple:
+        return (lambda x, v: self._hvp_mu(x, v),)
