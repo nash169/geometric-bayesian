@@ -1,0 +1,15 @@
+[project]
+name = "geometric-bayesian"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flax>=0.10.5",
+    "ipympl>=0.9.7",
+    "jax>=0.5.3",
+    "jaxtyping>=0.3.1",
+    "jupyterlab>=4.4.0",
+    "matplotlib>=3.10.1",
+    "optax>=0.2.4",
+]
