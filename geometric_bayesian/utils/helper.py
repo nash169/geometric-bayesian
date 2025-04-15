@@ -1,8 +1,10 @@
-from collections.abc import Iterator
-
-import jax.numpy as jnp
+import math
 import numpy as np
-from jax import random
+import jax
+import jax.numpy as jnp
+
+from collections.abc import Iterator
+from geometric_bayesian.utils.types import Matrix, PyTree, List, Vector, PyTreeDef, Optional, Int, Callable
 
 
 class DataLoader:
@@ -35,46 +37,43 @@ class DataLoader:
         return self.X[batch_indices], self.y[batch_indices]
 
 
-# Function to create the sinusoid dataset
-def get_sinusoid_example(
-    num_data: int = 150,
-    sigma_noise: float = 0.3,
-    batch_size: int = 150,
-    rng_key=None,
-) -> tuple[
-    jnp.ndarray, jnp.ndarray, Iterator[tuple[jnp.ndarray, jnp.ndarray]], jnp.ndarray, jnp.ndarray
-]:
-    if rng_key is None:
-        rng_key = random.PRNGKey(0)
-    """Generate a sinusoid dataset.
+def array_to_pytree(
+    arr: Vector | Matrix,
+    tree: tuple[List, PyTreeDef] | PyTree
+) -> PyTree:
+    if isinstance(tree, tuple):  # and list(map(type, tree)) == [List, PyTreeDef]
+        shapes, tree_def = tree
+    elif isinstance(tree, PyTree):
+        leaves, tree_def = jax.tree.flatten(tree)
+        shapes = [leaf.shape for leaf in leaves]
+    else:
+        msg = "`tree` must be a tuple [List, PyTreeDef] or a PyTree structure."
+        raise TypeError(msg)
+    arr_split = jnp.split(arr, jnp.cumsum(jnp.array([math.prod(sh) for sh in shapes])[:-1]), axis=-1)
+    return jax.tree.unflatten(
+        tree_def,
+        [a.reshape(-1, *sh) if isinstance(arr, Matrix) else a.reshape(sh) for a, sh in zip(arr_split, shapes, strict=True)],
+    )
 
-    Args:
-        num_data: Number of data points.
-        sigma_noise: Standard deviation of the noise.
-        batch_size: Batch size for the data loader.
-        rng_key: Random number generator key.
 
-    Returns:
-        X_train: Training input data.
-        y_train: Training target data.
-        train_loader: Data loader for training data.
-        X_test: Testing input data.
-    """
-    # Split RNG key for reproducibility
-    rng_key, rng_noise = random.split(rng_key)
+def pytree_to_array(
+        tree: PyTree,
+        axis: Optional[int] = None
+) -> Vector | Matrix:
+    leaves, _ = jax.tree.flatten(tree)
+    return jnp.concatenate([leaf.ravel() for leaf in leaves]) if axis is None else jnp.hstack([leaf.reshape(leaf.shape[axis], -1) for leaf in leaves])
 
-    # Generate random training data
-    X_train = (
-        random.uniform(rng_key, (num_data, 1)) * 10
-    )  # X_train values between 0 and 8
-    noise = random.normal(rng_noise, X_train.shape) * sigma_noise
-    y_train = jnp.sin(X_train) + noise
 
-    # Generate testing data
-    X_test = jnp.linspace(-5, 15, 500).reshape(-1, 1)
-    y_test = jnp.sin(X_test)
+def pytree_size(
+        tree: PyTree
+) -> Int:
+    return sum(x.size for x in jax.tree.leaves(tree))
 
-    # Create the training data loader
-    train_loader = DataLoader(X_train, y_train, batch_size)
 
-    return X_train, y_train, train_loader, X_test, y_test
+def wrap_pytree_function(
+    f: Callable,
+    tree: tuple[List, PyTreeDef] | PyTree
+):
+    def fn_wrap(*args):
+        return pytree_to_array(f(*[array_to_pytree(arg, tree) for arg in args]))
+    return fn_wrap
