@@ -7,3 +7,4 @@ Some useful link:
     - https://docs.jax.dev/en/latest/jit-compilation.html
     - https://docs.jax.dev/en/latest/pytrees.html
     - https://docs.jax.dev/en/latest/advanced-autodiff.html#advanced-autodiff
+    - https://docs.jax.dev/en/latest/notebooks/Custom_derivative_rules_for_Python_code.html#
