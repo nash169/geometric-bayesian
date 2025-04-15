@@ -21,6 +21,8 @@ class DiagOperator(SymOperator):
         if isinstance(op_diag, Scalar):
             assert (op_size is not None)
             self._op_size = op_size
+        else:
+            self._op_size = len(op_diag)
         self._op_diag = op_diag
 
     def size(
@@ -29,7 +31,7 @@ class DiagOperator(SymOperator):
         r"""
         Return size of the linear operator
         """
-        jnp.array([self._op_size, self._op_size])
+        return jnp.array([self._op_size, self._op_size])
 
     def mv(
         self,

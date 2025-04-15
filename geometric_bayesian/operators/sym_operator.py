@@ -4,7 +4,7 @@
 import jax.numpy as jnp
 from geometric_bayesian.operators.linear_operator import LinearOperator
 from geometric_bayesian.utils.types import Scalar, Vector
-from geometric_bayesian.utils.lanczos import lanczos
+from geometric_bayesian.linalg.lanczos import lanczos
 from jax.scipy.linalg import eigh_tridiagonal
 from jax.experimental.sparse.linalg import lobpcg_standard
 
