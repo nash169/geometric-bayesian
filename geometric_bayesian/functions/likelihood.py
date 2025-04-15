@@ -1,36 +1,68 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from collections.abc import Callable
 import jax
-from flax import nnx
 
-from geometric_bayesian.utils.jax import array_to_pytree, pytree_to_array, pytree_size
-from geometric_bayesian.utils.types import VectorFn, Vector, Matrix, PyTree, Optional, Int
-
-# logll - model
+from geometric_bayesian.utils.types import Vector
 
 
-def logll_fwd(X, y, pdf, **pdf_params):
-    return lambda model: pdf(model(X), **pdf_params)._logpdf(y)
+def neg_logll(
+    p: Callable,
+    y: Vector,
+    f: Vector
+):
+    r"""
+    Calculate mapping from latent function values f to oberved labels via density p.
+
+    Args:
+        p: Probability density
+        f: Latent function values
+        y: Observed labels
+
+    Returns:
+        Negative log-likelihood
+    """
+    return jax.vmap(lambda y, f: -p(f)._log(y), in_axes=(0, 0))(y, f).sum()
 
 
-@jax.custom_jvp
-def logll_fn(model_fn):
-    return jax.vmap(lambda y, model_fn: -likelihood(model_fn)._logpdf(y), in_axes=(0, 0), out_axes=0)(targets, model_fn)
+def neg_logll_jvp(
+    p: Callable,
+    y: Vector,
+    f: Vector,
+    v: Vector
+):
+    r"""
+    Calculate differential of the mapping from latent function values f to oberved labels via density p.
+
+    Args:
+        p: Probability density
+        y: Observed labels
+        f: Latent function values
+        v: Tangent vector
+
+    Returns:
+        JVP of Negative log-likelihood
+    """
+    return jax.vmap(lambda y, f, v: -p(f)._jvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v)
 
 
-@logll_fn.defjvp
-@jax.custom_jvp
-def logll_jvp(primals, tangents):
-    model_fn = primals[0]
-    v = tangents[0]
-    return logll_fn(model_fn), jax.vmap(lambda y, model_fn, v: -likelihood(model_fn)._logpdf_jvp_mean(y, v), in_axes=(0, 0, 0))(targets, model_fn, v)
+def neg_logll_hvp(
+    p: Callable,
+    y: Vector,
+    f: Vector,
+    v: Vector
+):
+    r"""
+    Calculate hessian of the mapping from latent function values f to oberved labels via density p.
 
-# log-likelihood hessian-vector product
+    Args:
+        p: Probability density
+        y: Observed labels
+        f: Latent function values
+        v: Tangent vector
 
-
-@logll_jvp.defjvp
-def logll_hvp(primals, tangents):
-    model_fn = primals[0]
-    v = tangents[0]
-    return logll_fn(model_fn), jax.vmap(lambda y, model_fn, v: -likelihood(model_fn)._logpdf_hvp_mean(y, v), in_axes=(0, 0, 0))(targets, model_fn, v)
+    Returns:
+        HVP of Negative log-likelihood
+    """
+    return jax.vmap(lambda y, f, v: -p(f)._hvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v)
