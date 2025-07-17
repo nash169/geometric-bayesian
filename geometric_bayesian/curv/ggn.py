@@ -4,7 +4,7 @@
 import jax
 from flax import nnx
 
-from geometric_bayesian.utils.types import VectorFn, Vector, Matrix, PyTree, Callable
+from geometric_bayesian.utils.types import VectorFn, Vector, Matrix, PyTree, Callable, Float, Optional
 from geometric_bayesian.functions.likelihood import neg_logll_hvp
 
 
@@ -12,7 +12,8 @@ def ggn(
     p: Callable,
     f: Callable,
     X: Vector | Matrix,
-    y: Vector | Matrix
+    y: Vector | Matrix,
+    scaling: Optional[Float] = None
 ) -> VectorFn:
 
     graph_def, _ = nnx.split(f)
@@ -23,6 +24,8 @@ def ggn(
         v: PyTree,
     ):
         _, jvp = jax.linearize(model_fn, x)
-        return jax.linear_transpose(jvp, x)(neg_logll_hvp(p, y, model_fn(x), jvp(v)))[0]
+        return jax.linear_transpose(jvp, x)(
+            scaling * neg_logll_hvp(p, y, model_fn(x), jvp(v)) if scaling is not None else neg_logll_hvp(p, y, model_fn(x), jvp(v))
+        )[0]
 
     return fn
