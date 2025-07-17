@@ -8,8 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import jax.numpy as np
-import jax.ops as ops
+import jax.numpy as jnp
 import jax.random as random
 
 
@@ -37,11 +36,11 @@ def lanczos(mv, dim, order, rng_key):
         vectors.
     """
 
-    d, e = np.zeros(order), np.zeros(order-1)
-    vecs = np.zeros((order, dim))
+    d, e = jnp.zeros(order), jnp.zeros(order-1)
+    vecs = jnp.zeros((order, dim))
 
     init_vec = random.normal(rng_key, shape=(dim,))
-    init_vec = init_vec / np.linalg.norm(init_vec)
+    init_vec = init_vec / jnp.linalg.norm(init_vec)
     vecs = vecs.at[0].set(init_vec)
 
     beta = 0
@@ -57,17 +56,17 @@ def lanczos(mv, dim, order, rng_key):
         assert (w.shape[0] == dim and len(w.shape) == 1), ('Output of mv(v) must be of shape [dim].')
         w = w - beta * v_old
 
-        alpha = np.dot(w, v)
+        alpha = jnp.dot(w, v)
         d = d.at[i].set(alpha)
         w = w - alpha * v
 
         # Full Reorthogonalization
         for j in range(i):
             tau = vecs[j, :].reshape((dim))
-            coeff = np.dot(w, tau)
+            coeff = jnp.dot(w, tau)
             w += -coeff * tau
 
-        beta = np.linalg.norm(w)
+        beta = jnp.linalg.norm(w)
 
         # TODO(gilmer): The tf implementation raises an exception if beta < 1e-6
         # here. However JAX cannot compile a function that has an if statement
