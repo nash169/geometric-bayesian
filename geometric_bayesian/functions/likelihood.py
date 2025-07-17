@@ -23,7 +23,7 @@ def neg_logll(
     Returns:
         Negative log-likelihood
     """
-    return jax.vmap(lambda y, f: -p(f)._log(y), in_axes=(0, 0))(y, f).sum()
+    return jax.vmap(lambda y, f: -p(f)(y), in_axes=(0, 0))(y, f).mean() if y.shape[0] > 1 else -p(f)(y).squeeze()
 
 
 def neg_logll_jvp(
@@ -44,7 +44,7 @@ def neg_logll_jvp(
     Returns:
         JVP of Negative log-likelihood
     """
-    return jax.vmap(lambda y, f, v: -p(f)._jvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v)
+    return jax.vmap(lambda y, f, v: -p(f).jvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v) / y.shape[0] if y.shape[0] > 1 else -p(f).jvp_params()[0](y, v)
 
 
 def neg_logll_hvp(
@@ -65,4 +65,4 @@ def neg_logll_hvp(
     Returns:
         HVP of Negative log-likelihood
     """
-    return jax.vmap(lambda y, f, v: -p(f)._hvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v)
+    return jax.vmap(lambda y, f, v: -p(f).hvp_params()[0](y, v), in_axes=(0, 0, 0))(y, f, v) / y.shape[0] if y.shape[0] > 1 else -p(f).hvp_params()[0](y, v)
