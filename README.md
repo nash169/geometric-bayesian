@@ -1,7 +1,7 @@
 # Geometric Bayesian
-This repo contains some jax-based implementation for posterior approximation and sampling in parameters' space non-Euclidean geometry in the context of Bayesian inference.
-The (linear) operator-based structure is heavily inspired by [`gpytorch`](https://github.com/cornellius-gp/gpytorch) and therefore on [`linear_operator`](https://github.com/cornellius-gp/linear_operator).
-The geometric structure, in particular the embedding-based first (metric) and second (Christoffel symbols) order geometry, is a (more efficient and matrix-free) jax implementation of [`learn-embedding`](https://github.com/nash169/learn-embedding) algorithms.
+This repository contains JAX-based implementations for posterior approximation and sampling in parameter spaces with non-Euclidean geometry, within the context of Bayesian inference.
+The (linear) operator-based structure is heavily inspired by [`gpytorch`](https://github.com/cornellius-gp/gpytorch) and therefore by [`linear_operator`](https://github.com/cornellius-gp/linear_operator).
+The geometric structure, in particular the embedding-based first (metric) and second (Christoffel symbols) order geometry, is a more efficient, matrix-free, jax implementation of [`learn-embedding`](https://github.com/nash169/learn-embedding) algorithms.
 
 <p align="center">
   <img width="40%" src="media/pred_mean.png">
