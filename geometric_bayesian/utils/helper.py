@@ -3,7 +3,7 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from geometric_bayesian.utils.types import Matrix, PyTree, List, Vector, PyTreeDef, Optional, Int, Callable
 
 
@@ -37,6 +37,23 @@ class DataLoader:
         return self.X[batch_indices], self.y[batch_indices]
 
 
+def cumsum(seq: Generator) -> list[int]:
+    """Compute the cumulative sum of a sequence.
+
+    This function takes a sequence of integers and returns a list of cumulative
+    sums.
+
+    Args:
+        seq: A generator or sequence of integers.
+
+    Returns:
+        A list where each element is the cumulative sum up to that point
+        in the input sequence.
+    """
+    total = 0
+    return [total := total + ele for ele in seq]
+
+
 def array_to_pytree(
     arr: Vector | Matrix,
     tree: tuple[List, PyTreeDef] | PyTree
@@ -49,7 +66,7 @@ def array_to_pytree(
     else:
         msg = "`tree` must be a tuple [List, PyTreeDef] or a PyTree structure."
         raise TypeError(msg)
-    arr_split = jnp.split(arr, jnp.cumsum(jnp.array([math.prod(sh) for sh in shapes])[:-1]), axis=-1)
+    arr_split = jnp.split(arr, cumsum(math.prod(sh) for sh in shapes)[:-1], axis=-1)
     return jax.tree.unflatten(
         tree_def,
         [a.reshape(-1, *sh) if isinstance(arr, Matrix) else a.reshape(sh) for a, sh in zip(arr_split, shapes, strict=True)],
@@ -77,3 +94,12 @@ def wrap_pytree_function(
     def fn_wrap(*args):
         return pytree_to_array(f(*[array_to_pytree(arg, tree) for arg in args]))
     return fn_wrap
+
+
+def random_psd(dim):
+    import jax
+    import jax.numpy as jnp
+    rng_key = jax.random.key(0)
+    mat = jax.random.uniform(rng_key, shape=dim)
+    mat = mat + mat.T + 100 * jnp.eye(dim)
+    return mat
