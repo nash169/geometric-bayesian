@@ -21,7 +21,7 @@ The library provides matrix-free efficient implementation of some of the most co
  - [x] Positive Semi Definite Operator
  - [x] Low Rank Operator
  - [x] Diagonal Operator
- - [ ] Sparse operator (see [`manifold-gp`](https://github.com/nash169/manifold-gp)
+ - [ ] Sparse operator (see [`manifold-gp`](https://github.com/nash169/manifold-gp))
 
 ### Probability Density Functions
 For Bayesian regression and classification, the library offer a set operator-based densities for efficiently construct common quantities like likelihood, prior, ...
