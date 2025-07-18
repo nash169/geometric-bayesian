@@ -13,5 +13,4 @@ __all__ = [
     "PSDOperator",
     "DiagOperator",
     "LowRankOperator",
-    "InvOperator"
 ]
