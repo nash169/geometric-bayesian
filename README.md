@@ -4,13 +4,13 @@ The (linear) operator-based structure is heavily inspired by [`gpytorch`](https:
 The geometric structure, in particular the embedding-based first (metric) and second (Christoffel symbols) order geometry, is a (more efficient and matrix-free) jax implementation of [`learn-embedding`](https://github.com/nash169/learn-embedding) algorithms.
 
 <p align="center">
-  <img width="30%" src="media/pred_mean.png">
-  <img width="30%" src="media/pred_std.png">
+  <img width="25%" src="media/pred_mean.png">
+  <img width="25%" src="media/pred_std.png">
+  <img width="25%" src="media/posterior_samples.png">
+  <img width="25%" src="media/geodesic_integration.png">
 </p>
 
 <p align="center">
-  <img width="30%" src="media/posterior_samples.png">
-  <img width="30%" src="media/geodesic_integration.png">
 </p>
 
 ## Features/ToDo
