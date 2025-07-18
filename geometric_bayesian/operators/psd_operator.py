@@ -3,61 +3,66 @@
 
 import jax
 import jax.numpy as jnp
-from matplotlib.pyplot import isinteractive
-
-from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, VectorFn, Optional, Callable
-from geometric_bayesian.operators.sym_operator import SymOperator
 from jax.scipy.sparse.linalg import cg
+
+from geometric_bayesian.utils.types import Scalar, Vector, Matrix, Optional, Callable, Array, VectorInt
+from geometric_bayesian.operators.linear_operator import LinearOperator
+from geometric_bayesian.operators import DenseOperator, SymOperator
 
 
 class PSDOperator(SymOperator):
     def __init__(
         self,
-        op: Matrix | Callable,
+        op: Optional[Matrix | Callable] = None,
         op_type: Optional[str] = None,
-        op_size: Optional[int] = None
+        op_size: Optional[int] = None,
+        rng_key: Optional[Array] = None
     ) -> None:
         r"""
         mat_type: ['raw', 'tril', 'triu']
         """
-        if isinstance(op, Matrix):
-            assert (op_type is not None)
-            if op_type == 'raw':
-                self._op = jnp.linalg.cholesky(op)
-                self._op_is_tril = True
-            elif op_type == 'tril':
+        if op is not None:
+            if isinstance(op, jax.Array):
+                assert (op_type is not None), "Matrix provided but type not defined [ 'raw', 'tril', 'triu' ]"
+                if op_type == 'raw':
+                    self._op = jnp.linalg.cholesky(op)
+                    self._op_is_tril = True
+                elif op_type == 'tril':
+                    self._op = op
+                    self._op_is_tril = True
+                elif op_type == 'triu':
+                    self._op = op
+                    self._op_is_tril = False
+                else:
+                    msg = "invalid operator type [ 'raw', 'tril', 'triu' ]"
+                    raise ValueError(msg)
+                self._op_size = op.shape[0]
+            elif isinstance(op, Callable):
+                assert (op_size is not None), "Matrix-free operator provided; define operator dimension."
                 self._op = op
-                self._op_is_tril = True
-            elif op_type == 'triu':
-                self._op = op
-                self._op_is_tril = False
+                self._op_size = op_size
             else:
-                msg = "invalid operator type [ 'raw', 'tril', 'triu' ]"
-                raise ValueError(msg)
-        elif isinstance(op, Callable):
-            assert (op_size is not None)
-            self._op = op
-            self._op_size = op_size
+                msg = "invalid operator [ Matrix | Callable ]"
         else:
-            msg = "invalid operator [ Matrix | VectorFn ]"
+            assert (op_size is not None), "No operator provided; define operator dimension to generate random PSD."
+            if rng_key is None:
+                rng_key = jax.random.key(0)
+            mat = jax.random.uniform(jax.random.split(rng_key)[1], shape=(op_size, op_size))
+            mat = mat + mat.T + 100 * jnp.eye(op_size)
+            self._op = jnp.linalg.cholesky(mat)
+            self._op_is_tril = True
 
-    def size(self) -> Size:
+    def size(self) -> VectorInt:
         r"""
         Return size of the linear operator
         """
-        return jnp.array([self._op.shape[0], self._op.shape[1]]) if isinstance(self._op, Matrix) else jnp.array([self._op_size, self._op_size])
+        return jnp.array([self._op_size, self._op_size]) if isinstance(self._op, Callable) else jnp.array([self._op.shape[0], self._op.shape[1]])
 
     def mv(self, vec: Vector) -> Vector:
         r"""
         Return matrix-vector multiplication of the linear operator
         """
-        return jnp.matmul(self._op, jnp.matmul(jnp.transpose(self._op), vec)) if isinstance(self._op, Matrix) else self._op(vec)
-
-    def transpose(self) -> SymOperator:
-        r"""
-        Return transposed matrix-vector multiplication of the linear operator
-        """
-        return self
+        return self._op(vec) if isinstance(self._op, Callable) else jnp.matmul(self._op, jnp.matmul(jnp.transpose(self._op), vec))
 
     def solve(
         self,
@@ -67,29 +72,51 @@ class PSDOperator(SymOperator):
         r"""
         Return solve of the linear operator
         """
-        return jax.scipy.linalg.cho_solve((self._op, self._op_is_tril), vec) if isinstance(self._op, Matrix) else cg(lambda v: self.mv(v), vec, **kwargs)[0]
+        return cg(lambda v: self.mv(v), vec, **kwargs)[0] if isinstance(self._op, Callable) else jax.scipy.linalg.cho_solve((self._op, self._op_is_tril), vec)
 
-    def det(
+    def logdet(
         self,
     ) -> Scalar:
         r"""
         Return determinant of the linear operator
         """
-        return jnp.prod(jnp.diag(self._op))
+        return super().logdet() if isinstance(self._op, Callable) else jnp.sum(jnp.log(jnp.diag(self._op)))
 
-    def inv_quad(
+    def invquad(
         self,
         vec: Vector
     ) -> Scalar:
         r"""
         Return x^T A^-1 x for the linear operator A
         """
-        return jnp.sum(jnp.pow(jax.scipy.linalg.solve_triangular(self._op, vec, lower=True), 2))
+        return super().invquad(vec) if isinstance(self._op, Callable) else jnp.sum(jnp.pow(jax.scipy.linalg.solve_triangular(self._op, vec, lower=True), 2))
 
-    def dense_operator(
+    def dense(
         self,
-    ) -> Matrix:
+    ) -> LinearOperator:
         r"""
         Return dense matrix representation of the linear operator
         """
-        return jnp.matmul(self._op, jnp.transpose(self._op))
+        return super().dense() if isinstance(self._op, Callable) else DenseOperator(self._op @ self._op.T)
+
+    def lowrank(
+        self,
+        **kwargs
+    ) -> LinearOperator:
+        from geometric_bayesian.operators.low_rank_operator import LowRankOperator
+        eigval, eigvec = self.diagonalize(**kwargs)
+        return LowRankOperator(diag=eigval, right=eigvec)
+
+    def squareroot(
+        self,
+        **kwargs
+    ) -> LinearOperator:
+        if isinstance(self._op, Callable):
+            if self._op_size <= 100:
+                from geometric_bayesian.operators import DenseOperator
+                return DenseOperator(jnp.linalg.cholesky(self.dense()._mat))
+            else:
+                return self.lowrank().squareroot()
+        else:
+            from geometric_bayesian.operators import DenseOperator
+            return DenseOperator(self._op)
