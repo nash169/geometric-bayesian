@@ -97,7 +97,7 @@ class PSDOperator(SymOperator):
         r"""
         Return dense matrix representation of the linear operator
         """
-        return super().dense() if isinstance(self._op, Callable) else DenseOperator(self._op @ self._op.T)
+        return DenseOperator(self(jnp.eye(self._op_size))) if isinstance(self._op, Callable) else DenseOperator(self._op @ self._op.T)
 
     def lowrank(
         self,
