@@ -17,7 +17,8 @@ class MLP(nnx.Module):
         prob: Optional[bool] = False,
         **kwargs
     ):
-        self.layers = [nnx.Linear(m, n, rngs=nnx.Rngs(params=0), **kwargs) for m, n in zip(layers[:-1], layers[1:])]
+        rngs = nnx.Rngs(params=0)
+        self.layers = [nnx.Linear(m, n, rngs=rngs, **kwargs) for m, n in zip(layers[:-1], layers[1:])]
         if nl is not None:
             self.nl = nl
         if prob:

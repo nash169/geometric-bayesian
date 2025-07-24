@@ -73,4 +73,4 @@ def pred_posterior(
             in_axes=1
         )(params_samples)
 
-    return lambda x, y: jax.vmap(lambda mu, y: likelihood(mu)._log(y), in_axes=(0, None))(model_fn(x), y).mean()
+    return lambda x, y: jax.vmap(lambda mu, y: likelihood(mu)(y), in_axes=(0, None))(model_fn(x), y).mean()
