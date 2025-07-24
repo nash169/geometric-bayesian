@@ -38,7 +38,7 @@ class MultivariateNormal(AbstractDensity):
         r"""
         Evaluate density.
         """
-        return -0.5 * (self._cov.logdet(**kwargs) + self._cov.size()[0] * jnp.log(jnp.pi) + self._cov.invquad(x - self._mean if hasattr(self, "_mean") else x, **kwargs))
+        return -0.5 * (self._cov.logdet(**kwargs) + self._cov.size()[0] * jnp.log(2 * jnp.pi) + self._cov.invquad(x - self._mean if hasattr(self, "_mean") else x, **kwargs))
 
     def sample(
         self,

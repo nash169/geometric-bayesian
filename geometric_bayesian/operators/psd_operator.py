@@ -80,7 +80,7 @@ class PSDOperator(SymOperator):
         r"""
         Return determinant of the linear operator
         """
-        return super().logdet() if isinstance(self._op, Callable) else jnp.sum(jnp.log(jnp.diag(self._op)))
+        return super().logdet() if isinstance(self._op, Callable) else 2 * jnp.sum(jnp.log(jnp.diag(self._op)))
 
     def invquad(
         self,
