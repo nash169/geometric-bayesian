@@ -29,10 +29,11 @@ def diagonalize(
     if num_iterations is None:
         num_iterations = 10
     if method is None:
-        method = 'lanczos' if dim >= 1e3 else 'symeig'
+        # method = 'lanczos' if dim >= 1e3 else 'symeig'
+        method = 'symeig'
 
     if method == 'symeig':
-        d, v = jnp.linalg.eigh(jax.vmap(mv)(jnp.eye(dim)))
+        d, v = jnp.linalg.eigh(mv.dense()._mat)
     elif method == 'lanczos':
         alpha, beta, v = lanczos(mv, dim, num_modes, rng_key)
         d = jax.scipy.linalg.eigh_tridiagonal(alpha, beta, eigvals_only=True)
