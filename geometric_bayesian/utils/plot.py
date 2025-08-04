@@ -11,7 +11,7 @@ from itertools import combinations
 from geometric_bayesian.utils.types import Callable
 
 
-def colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, ticks=None):
+def colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, labelpad=-50, ticks=None):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes(pos, size=size, pad=pad)
     cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
@@ -19,7 +19,7 @@ def colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, ticks=None
     cbar.outline.set_visible(False)
     cbar.set_ticks([])
     if label is not None:
-        cbar.set_label('$' + label + '$', fontsize=18, rotation=90, labelpad=(-50 if pos == "left" else +50))
+        cbar.set_label('$' + label + '$', fontsize=18, rotation=90, labelpad=labelpad)
 
 
 def get_xyz(fn, min, max, res):
@@ -82,13 +82,17 @@ def contour_nd_plot(fn, ranges, resolution=50, reduce_fn=jnp.sum, iso=False, alp
         if iso:
             ax.contour(Xi, Xj, F_proj, 10, cmap=None, colors='#f2e68f', zorder=zorder)
 
-        ax.axes.get_xaxis().set_visible(False)
-        ax.axes.get_yaxis().set_visible(False)
+        # ax.axes.get_xaxis().set_visible(False)
+        # ax.axes.get_yaxis().set_visible(False)
         ax.axis('equal')
-        ax.axis('off')
+        # ax.axis('off')
         ax.set_title(f"Projection onto axes ({i}, {j})")
-        ax.set_xlabel(f"x{i}")
-        ax.set_ylabel(f"x{j}")
+        ax.set_xlabel(f"x{i}", labelpad=-5)
+        ax.set_ylabel(f"x{j}", labelpad=-20)
+        ax.set_xticks([Xi.min(), Xi.max()])
+        ax.set_yticks([Xj.min(), Xj.max()])
+        ax.yaxis.set_label_position("right")
+        ax.yaxis.tick_right()
 
         if cbar:
             # fig.colorbar(im, ax=ax)
