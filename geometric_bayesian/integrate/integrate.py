@@ -3,7 +3,7 @@
 
 import jax
 import jax.numpy as jnp
-from geometric_bayesian.utils.types import Callable, Optional, Array, Float
+from geometric_bayesian.utils.types import Callable, Optional, Array, Float, Key
 from geometric_bayesian.integrate.ef import ef
 
 
@@ -13,15 +13,19 @@ def integrate(
     dt: Optional[Float] = 0.01,
     T: Optional[Float] = 1.0,
     integrator: Optional[Callable] = ef,
+    key: Optional[Key] = None
 ):
     assert integrator is not None and dt is not None and T is not None
 
     def step(carry, i):
         t = i * dt
-        x = integrator(f=f, t=t, x=carry[0], u=u, dt=dt)
-        return (x, t), (x, )
+        x, key = carry
+        if key is not None:
+            key, subkey = jax.random.split(key)
+        x = integrator(f=f if key is None else lambda t, x, u: f(t=t, x=x, u=u, key=subkey), t=t, x=carry[0], u=u, dt=dt)
+        return (x, key), (x, )
 
-    return lambda x: jax.lax.scan(step, (x, 0.), jnp.arange(int(T / dt)))[1]
+    return lambda x: jax.lax.scan(step, (x, key), jnp.arange(int(T / dt)))[1]
 
 # def euler_forward(f, x, v, dt):
 #     vn = v + dt*f(x, v)
