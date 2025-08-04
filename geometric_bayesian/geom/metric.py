@@ -20,15 +20,17 @@ def christoffel_fk(
     Returns:
         Christoffel symbols first kind
     """
-    def fn(x, v):
+    def fn(x, v, u):
         dg = jax.jacfwd(lambda x: jax.lax.map(lambda v: g(x, v), jnp.eye(len(x))))(x)
-        return jnp.einsum('mji,j->mi', dg, v)@v - 0.5*jnp.einsum('ijm,j->mi', dg, v)@v
+        return jnp.einsum('mji,j->mi', dg, v) @ u - 0.5 * jnp.einsum('ijm,j->mi', dg, v) @ u
+        # return 0.5 * (jnp.einsum('mij,j->mi', dg, v) @ u + jnp.einsum('mji,j->mi', dg, v) @ u - jnp.einsum('ijm,j->mi', dg, v) @ u)
 
     return fn
 
 
 def christoffel_sk(
     g: Callable,
+    g_inv: Optional[Callable] = None
 ) -> Callable:
     r"""
     Calculate the christoffel symbols of the second kind (T_kij) given metric
@@ -39,7 +41,10 @@ def christoffel_sk(
     Returns:
         Christoffel symbols second kind
     """
-    def fn(x, v):
-        return jax.scipy.sparse.linalg.cg(lambda v: g(x, v), christoffel_fk(g)(x, v))[0]
+    def fn(x, v, u):
+        if g_inv is None:
+            return jax.scipy.sparse.linalg.cg(lambda v: g(x, v), christoffel_fk(g)(x, v, u))[0]
+        else:
+            return g_inv(x, christoffel_fk(g)(x, v, u))
 
     return fn
