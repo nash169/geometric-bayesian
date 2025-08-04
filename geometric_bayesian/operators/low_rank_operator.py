@@ -45,7 +45,9 @@ class LowRankOperator(LinearOperator):
         r"""
         Return solve of the linear operator
         """
-        return self.right @ ((self.left.T @ vec) / self.diag)
+        inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
+        return self.right @ ((self.left.T @ vec) * inv_d)
+        # return self.right @ ((self.left.T @ vec) / self.diag)
 
     def logdet(
         self,
@@ -75,7 +77,8 @@ class LowRankOperator(LinearOperator):
     def inverse(
             self
     ) -> LinearOperator:
-        return LowRankOperator(diag=jnp.reciprocal(self.diag), right=self.right, left=self.left)
+        inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
+        return LowRankOperator(diag=inv_d, right=self.right, left=self.left)
 
     def squareroot(
             self
