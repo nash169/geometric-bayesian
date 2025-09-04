@@ -2,6 +2,10 @@
 # encoding: utf-8
 
 def ef(f, t, x, u, dt):
+    return x + dt * f(t, x, u)
+
+
+def ef_s(f, t, x, u, dt):
     drift, diffusion = f(t, x, u)
     if drift is not None:
         x += dt * drift
