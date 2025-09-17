@@ -51,13 +51,23 @@ class MLP(nnx.Module):
             )(p)
         return fwd
 
+    def jvp(
+        self
+    ) -> Callable:
+        graph_def, params = nnx.split(self)
+
+        def jvp_fwd(x, p):
+            model_lin = jax.linearize(lambda pvar: nnx.call((graph_def, pvar))(x)[0], array_to_pytree(p, params))[1]
+            return wrap_pytree_function(model_lin, params)
+        return jvp_fwd
+
     @property
     def params(self) -> Vector:
         return pytree_to_array(nnx.state(self))
 
     @params.setter
     def params(self, value):
-        nnx.update(self, value)
+        nnx.update(self, array_to_pytree(value, nnx.state(self)))
         # self = nnx.merge(nnx.split(self)[0], value)
 
     @property
