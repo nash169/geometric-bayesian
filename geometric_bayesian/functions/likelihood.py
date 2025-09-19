@@ -13,7 +13,7 @@ def neg_logll(
     f: Vector
 ):
     r"""
-    Calculate mapping from latent function values f to oberved labels via density p.
+    Calculate mapping from latent function values f to the observed labels via density p.
 
     Args:
         p: Probability density
@@ -33,7 +33,7 @@ def neg_logll_jvp(
     v: Vector
 ):
     r"""
-    Calculate differential of the mapping from latent function values f to oberved labels via density p.
+    Calculate differential of the mapping from latent function values f to the observed labels via density p.
 
     Args:
         p: Probability density
@@ -54,7 +54,7 @@ def neg_logll_hvp(
     v: Vector
 ):
     r"""
-    Calculate hessian of the mapping from latent function values f to oberved labels via density p.
+    Calculate hessian of the mapping from latent function values f to the observed labels via density p.
 
     Args:
         p: Probability density
