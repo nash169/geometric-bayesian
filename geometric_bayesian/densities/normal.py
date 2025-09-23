@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import math
 import jax
 import jax.numpy as jnp
-
-from geometric_bayesian.utils.types import Matrix, Scalar, Vector, ScalarFn, VectorFn
-from geometric_bayesian.operators.linear_operator import LinearOperator
+from geometric_bayesian.utils.types import Scalar, Optional, Tuple
 
 
 class Normal:
     def __init__(
         self,
         mean: Scalar,
-        cov: Scalar
+        var: Scalar
     ) -> None:
         r"""
         Define normal distribution.
@@ -21,85 +18,78 @@ class Normal:
                  Vector             -> diagonal covariace
                  LinearOperator   -> full covariance
         """
-        self._mean, self._cov = mean, cov
+        self._mean, self._var = mean, var
 
     def __call__(
         self,
-        x: Scalar | Vector
-    ) -> Scalar | Vector:
+        x: Scalar
+    ) -> Scalar:
         r"""
         Evaluate density.
         """
-        return jnp.exp(self.logpdf(x))
+        return -0.5 * (jnp.log(self._var) + jnp.log(2 * jnp.pi) + jnp.square(x - self._mean) / self._var)
 
-    def logpdf(
-        self,
-        x: Scalar | Vector
-    ) -> Scalar | Vector:
-        r"""
-        Returns the log probability density.
-        Note that when the mean is a scalar cov is 
-        """
-        return self._logpdf(x) if isinstance(x, Scalar) else jax.vmap(self._logpdf, in_axes=0)(x)
-
-    def logpdf_jvp(
-        self,
-        x: Scalar | Vector,
-        v: Scalar | Vector
-    ) -> Scalar | Vector:
-        r"""
-        Returns jacobian-vector product the log probability density.
-        Note that when the mean is a scalar cov is 
-        """
-        jvp = self._logpdf_jvp
-        if isinstance(x, Vector):
-            jvp = jax.vmap(jvp, in_axes=(0, None), out_axes=0)
-        if isinstance(v, Vector):
-            jvp = jax.vmap(jvp, in_axes=(None, 1), out_axes=1)
-        return jvp(x, v)
-
-    def logpdf_jvp_mean(
-        self,
-        x: Scalar | Vector,
-        v: Scalar | Vector
-    ) -> Scalar | Vector:
-        r"""
-        Returns jacobian-vector product the log probability density.
-        Note that when the mean is a scalar cov is 
-        """
-        jvp = self._logpdf_jvp_mean
-        if isinstance(x, Vector):
-            jvp = jax.vmap(jvp, in_axes=(0, None), out_axes=0)
-        if isinstance(v, Vector):
-            jvp = jax.vmap(jvp, in_axes=(None, 1), out_axes=1)
-        return jvp(x, v)
-
-    def _logpdf(
-        self,
-        x: Scalar
-    ) -> Scalar:
-        return -0.5*(jnp.log(self._cov) + jnp.log(2*math.pi) + jnp.square(x - self._mean)/self._cov)
-
-    def _logpdf_jvp(
+    def jvp(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
-        return (self._mean - x)/self._cov*v
+        return 0.5 * (self._mean - x) / self._var * v
 
-    def _logpdf_jvp_mean(
+    def hvp(
+        self,
+        x: Scalar,
+        v: Scalar
+    ) -> None:
+        NotImplementedError("Hessian vector product with respect to data not implemented yet.")
+
+    def jvp_params(
+        self,
+        **kwargs
+    ) -> Tuple:
+        r"""
+        Return handles for gradient function with respect to the params.
+        """
+        return lambda x, v: self._jvp_mean(x, v, **kwargs), lambda x, v: self._jvp_var(x, v, **kwargs)
+
+    def hvp_params(
+        self,
+        **kwargs
+    ) -> Tuple:
+        r"""
+        Return handles for hessian function with respect to the params.
+        """
+        return lambda x, v: self._hvp_mean(x, v, **kwargs), lambda x, v: self._hvp_var(x, v, **kwargs)
+
+    def _jvp_mean(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
-        return (x - self._mean)/self._cov*v
+        return (x - self._mean) / self._var * v
 
-    def _logpdf_hvp_mean(
+    def _jvp_var(
+        self,
+        x: Scalar,
+        v: Scalar,
+        **kwargs
+    ) -> None:
+        NotImplementedError("Jacobian vector product with respect to variance not implemented yet")
+
+    def _hvp_mean(
         self,
         x: Scalar,
         v: Scalar
     ) -> Scalar:
-        return -v/self._cov
+        return -v / self._var
+
+    def _hvp_var(
+        self,
+        x: Scalar,
+        v: Scalar,
+        **kwargs
+    ) -> None:
+        raise NotImplementedError("Hessian vector product with respect to variance not implemented yet")
 
 # class Normal:
 #     def __init__(
