@@ -17,7 +17,7 @@ def colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, labelpad=-
     cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
     cax.yaxis.set_ticks_position(pos)
     cbar.outline.set_visible(False)
-    cbar.set_ticks([])
+    # cbar.set_ticks([])
     if label is not None:
         cbar.set_label('$' + label + '$', fontsize=18, rotation=90, labelpad=labelpad)
 
