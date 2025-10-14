@@ -14,22 +14,29 @@ class MLP(nnx.Module):
         self,
         layers: List[int],
         nl: Optional[Callable] = nnx.tanh,
-        prob: Optional[bool] = False,
+        la: Optional[Callable] = None,
         **kwargs
     ):
+        r"""
+        Multilayer perceptron network.
+
+        Args:
+            layers: Network structure, e.g. [in_dim, layer_1_dim, ..., layer_n_dim, out_dim]
+            nl: Non-linear activation function, e.g. nnx.tanh, nnx.relu
+            la: Last layer activation function, e.g. nnx.sigmoid (binary classification), nnx.softmax (multi-class classification)
+        """
         rngs = nnx.Rngs(params=0)
         self.layers = [nnx.Linear(m, n, rngs=rngs, **kwargs) for m, n in zip(layers[:-1], layers[1:])]
-        # self.layers = [nnx.Linear(m, n, rngs=nnx.Rngs(params=0), **kwargs) for m, n in zip(layers[:-1], layers[1:])]
         if nl is not None:
             self.nl = nl
-        if prob:
-            self.prob = nnx.sigmoid if layers[-1] == 1 else nnx.softmax
+        if la:
+            self.la = la
 
     def __call__(self, x: Array):
         for layer in self.layers[:-1]:
             x = self.nl(layer(x)) if hasattr(self, 'nl') else layer(x)
         x = self.layers[-1](x).squeeze()
-        return self.prob(x) if hasattr(self, "prob") else x
+        return self.la(x) if hasattr(self, "la") else x
 
     def features(self, x: Array, l: Int):
         assert l <= len(self.layers)
