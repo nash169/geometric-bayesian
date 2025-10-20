@@ -17,7 +17,7 @@ def colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, labelpad=-
     cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
     cax.yaxis.set_ticks_position(pos)
     cbar.outline.set_visible(False)
-    # cbar.set_ticks([])
+    cbar.set_ticks([0.0])
     if label is not None:
         cbar.set_label('$' + label + '$', fontsize=18, rotation=90, labelpad=labelpad)
 
@@ -36,9 +36,13 @@ def get_xyz(fn, min, max, res):
     return x, y, z
 
 
-def contour_plot(fn, min=[-1, -1], max=[1, 1], res=100, iso=True, alpha=1.0, zorder=0, cbar=True, fig_ax=None, **kwargs):
+def contour_plot(fn, grid=None, min=[-1, -1], max=[1, 1], res=100, iso=True, alpha=1.0, zorder=0, cbar=True, fig_ax=None, **kwargs):
     fig, ax = plt.subplots() if fig_ax is None else fig_ax
-    x, y, z = get_xyz(fn, min, max, res)
+    if grid is None:
+        x, y, z = get_xyz(fn, min, max, res)
+    else:
+        z = fn
+        x, y = grid
     im = ax.contourf(x, y, z, 500, cmap="Spectral", alpha=alpha, zorder=zorder)
     if iso:
         ax.contour(x, y, z, 10, cmap=None, colors='#f2e68f', zorder=zorder)
