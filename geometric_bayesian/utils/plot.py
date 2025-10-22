@@ -36,7 +36,7 @@ def get_xyz(fn, min, max, res):
     return x, y, z
 
 
-def contour_plot(fn, grid=None, min=[-1, -1], max=[1, 1], res=100, iso=True, alpha=1.0, zorder=0, cbar=True, fig_ax=None, **kwargs):
+def contour_plot(fn, grid=None, min=[-1, -1], max=[1, 1], res=100, iso=True, alpha=1.0, zorder=0, cbar=True, xlabel=None, ylabel=None, fig_ax=None, **kwargs):
     fig, ax = plt.subplots() if fig_ax is None else fig_ax
     if grid is None:
         x, y, z = get_xyz(fn, min, max, res)
@@ -46,10 +46,23 @@ def contour_plot(fn, grid=None, min=[-1, -1], max=[1, 1], res=100, iso=True, alp
     im = ax.contourf(x, y, z, 500, cmap="Spectral", alpha=alpha, zorder=zorder)
     if iso:
         ax.contour(x, y, z, 10, cmap=None, colors='#f2e68f', zorder=zorder)
-    ax.axes.get_xaxis().set_visible(False)
-    ax.axes.get_yaxis().set_visible(False)
-    ax.axis('off')
+
+    # remove frame
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    # remove ticks
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+    # ax.axes.get_xaxis().set_visible(False)
+    # ax.axes.get_yaxis().set_visible(False)
+    # ax.axis('off')
     ax.axis('equal')
+    if xlabel is not None:
+        ax.set_xlabel(xlabel, fontsize=20)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel, fontsize=20)
 
     if cbar:
         colorbar(im, fig, ax, **kwargs)
