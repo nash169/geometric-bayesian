@@ -32,9 +32,9 @@ class MultivariateNormal(AbstractDensity):
 
     def __call__(
         self,
-        x: Scalar | Vector,
+        x: Vector,
         **kwargs
-    ) -> Scalar | Vector:
+    ) -> Vector:
         r"""
         Evaluate density.
         """
