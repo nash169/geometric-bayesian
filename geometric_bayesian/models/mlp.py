@@ -7,6 +7,8 @@ from flax import nnx
 
 from geometric_bayesian.utils.types import Size, List, Optional, Callable, Array, Int, Vector
 from geometric_bayesian.utils.helper import pytree_to_array, array_to_pytree, wrap_pytree_function
+from geometric_bayesian.operators.linear_operator import LinearOperator
+from geometric_bayesian.utils.math import outer_jacobian, inner_jacobian
 
 
 class MLP(nnx.Module):
@@ -67,6 +69,29 @@ class MLP(nnx.Module):
             model_lin = jax.linearize(lambda pvar: nnx.call((graph_def, pvar))(x)[0], array_to_pytree(p, params))[1]
             return wrap_pytree_function(model_lin, params)
         return jvp_fwd
+
+    def jtj(
+        self,
+        h: Optional[LinearOperator] = None
+    ) -> Callable:
+        graph_def, params = nnx.split(self)
+
+        def jtj_fn(x, p):
+            return wrap_pytree_function(
+                lambda v: inner_jacobian(lambda pvar: nnx.call((graph_def, pvar))(x)[0], h)(array_to_pytree(p, params), v),
+                params
+            )
+        return jtj_fn
+
+    def ntk(
+        self,
+        h: Optional[LinearOperator] = None
+    ) -> Callable:
+        graph_def, params = nnx.split(self)
+
+        def ntk_fn(x, p):
+            return lambda v: outer_jacobian(lambda pvar: nnx.call((graph_def, pvar))(x)[0], h)(array_to_pytree(p, params), v)
+        return ntk_fn
 
     @property
     def params(self) -> Vector:

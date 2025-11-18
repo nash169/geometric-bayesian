@@ -34,3 +34,25 @@ def pullback(
         hjv = jvp(v) if h is None else h(jvp(v))
         return jax.linear_transpose(jvp, v)(hjv)[0]
     return fn
+
+
+def inner_jacobian(
+    f: Callable,
+    h: Optional[LinearOperator] = None
+) -> Callable:
+    def fn(x, v):
+        _, jvp = jax.linearize(f, x)
+        hjv = jvp(v) if h is None else h(jvp(v))
+        return jax.linear_transpose(jvp, x)(hjv)[0]
+    return fn
+
+
+def outer_jacobian(
+    f: Callable,
+    h: Optional[LinearOperator] = None
+) -> Callable:
+    def fn(x, v):
+        _, jvp = jax.linearize(f, x)
+        hjtv = jax.linear_transpose(jvp, x)(v)[0] if h is None else h(jax.linear_transpose(jvp, x)(v)[0])
+        return jvp(hjtv)
+    return fn
