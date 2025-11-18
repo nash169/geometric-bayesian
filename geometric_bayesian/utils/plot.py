@@ -19,7 +19,7 @@ def simple_plot(
     **kwargs
 ):
     if fig is not None:
-        ax = fig.get_axes()
+        ax = fig.get_axes()[0]
     else:
         fig, ax = plt.subplots()
 
@@ -29,13 +29,15 @@ def simple_plot(
     else:
         ax.plot(*fn)
 
+    ax.set_xlim(range[0], range[1])
+
     fig.tight_layout()
     return fig
 
 
-def scatter_plot(data, fig=None, **kwargs):
+def scatter_plot(data, range=None, fig=None, **kwargs):
     if fig is not None:
-        ax = fig.get_axes()
+        ax = fig.get_axes()[0]
     else:
         if len(data) <= 2:
             fig, ax = plt.subplots()
@@ -43,6 +45,8 @@ def scatter_plot(data, fig=None, **kwargs):
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
     ax.scatter(*data, **kwargs)
+    if range is not None:
+        ax.set_xlim(range[0], range[1])
     return fig
 
 
