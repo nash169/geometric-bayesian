@@ -70,6 +70,27 @@ class MLP(nnx.Module):
             return wrap_pytree_function(model_lin, params)
         return jvp_fwd
 
+    def jtvp(
+        self
+    ) -> Callable:
+        graph_def, params = nnx.split(self)
+
+        def jtvp_fwd(x, p):
+            model_lin = jax.linearize(lambda pvar: nnx.call((graph_def, pvar))(x)[0], array_to_pytree(p, params))[1]
+            return lambda v: pytree_to_array(jax.linear_transpose(model_lin, array_to_pytree(p, params))(v)[0])
+
+        return jtvp_fwd
+
+    def vjp(
+        self
+    ) -> Callable:
+        graph_def, params = nnx.split(self)
+
+        def vjp_fwd(x, p):
+            jt = jax.linearize(lambda pvar: nnx.call((graph_def, pvar))(x)[0], array_to_pytree(p, params))[1]
+            return jt
+        return wrap_pytree_function(vjp_fwd, params)
+
     def jtj(
         self,
         h: Optional[LinearOperator] = None
