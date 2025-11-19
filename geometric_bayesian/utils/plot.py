@@ -90,7 +90,9 @@ def contour_plot(
         ax.set_xlabel(xlabel, fontsize=20)
     if ylabel is not None:
         ax.set_ylabel(ylabel, fontsize=20)
-    ax.axis('equal')
+    ax.set_xlim([min[0], max[0]])
+    ax.set_ylim([min[1], max[1]])
+    ax.set_aspect('equal', 'box')
 
     if cbar:
         _colorbar(im, fig, ax, **kwargs)
