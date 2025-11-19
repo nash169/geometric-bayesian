@@ -96,6 +96,15 @@ def wrap_pytree_function(
     return fn_wrap
 
 
+def wrap_array_function(
+    f: Callable,
+    tree: tuple[List, PyTreeDef] | PyTree
+):
+    def fn_wrap(*args):
+        return array_to_pytree(f(*[pytree_to_array(arg) for arg in args]), tree)
+    return fn_wrap
+
+
 def random_psd(dim):
     import jax
     import jax.numpy as jnp
