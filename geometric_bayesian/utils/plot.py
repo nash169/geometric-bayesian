@@ -1,12 +1,12 @@
 """Plotting utilities."""
 
-from pathlib import Path
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import combinations
+
+from numpy import base_repr
 
 from geometric_bayesian.utils.types import Callable
 
@@ -35,18 +35,38 @@ def simple_plot(
     return fig
 
 
-def scatter_plot(data, range=None, fig=None, **kwargs):
+def scatter_plot(data, ranges=None, fig=None, **kwargs):
+    dim = data.shape[0] if len(data.shape) == 1 else data.shape[1]
     if fig is not None:
         ax = fig.get_axes()[0]
     else:
-        if len(data) <= 2:
-            fig, ax = plt.subplots()
-        else:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
     ax.scatter(*data, **kwargs)
-    if range is not None:
-        ax.set_xlim(range[0], range[1])
+    if ranges is not None:
+        ax.set_xlim(*ranges[0])
+        ax.set_ylim(*ranges[1])
+        if dim == 3:
+            ax.set_zlim(*ranges[2])
+    return fig
+
+
+def quiver_plot(vecs, origin=None, ranges=None, fig=None, **kwargs):
+    dim = vecs.shape[0] if len(vecs.shape) == 1 else vecs.shape[0]
+    if fig is not None:
+        ax = fig.get_axes()[0]
+    else:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
+    if origin is not None:
+        ax.quiver(*origin, *vecs, **kwargs)
+    else:
+        ax.quiver(*jnp.zeros_like(vecs), *vecs, **kwargs)
+    if ranges is not None:
+        ax.set_xlim(*ranges[0])
+        ax.set_ylim(*ranges[1])
+        if dim == 3:
+            ax.set_zlim(*ranges[2])
     return fig
 
 
@@ -82,8 +102,6 @@ def contour_plot(
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
-    ax.set_xticks([x.min(), x.max()])
-    ax.set_yticks([y.min(), y.max()])
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
     if xlabel is not None:
@@ -92,6 +110,8 @@ def contour_plot(
         ax.set_ylabel(ylabel, fontsize=20)
     ax.set_xlim([min[0], max[0]])
     ax.set_ylim([min[1], max[1]])
+    ax.set_xticks([min[0], max[0]])
+    ax.set_yticks([min[1], max[1]])
     ax.set_aspect('equal', 'box')
 
     if cbar:
