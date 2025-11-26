@@ -42,7 +42,7 @@ def scatter_plot(data, ranges=None, fig=None, **kwargs):
     else:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
-    ax.scatter(*data, **kwargs)
+    ax.scatter(*data.T, **kwargs)
     if ranges is not None:
         ax.set_xlim(*ranges[0])
         ax.set_ylim(*ranges[1])
