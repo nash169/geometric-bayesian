@@ -63,7 +63,7 @@ class DiagOperator(SymOperator):
         Return dense matrix representation of the linear operator
         """
         from geometric_bayesian.operators.dense_operator import DenseOperator
-        return DenseOperator(jnp.diag(self.diag) if isinstance(self.diag, jax.Array) else self.diag * jnp.eye(self._dim))
+        return DenseOperator(jnp.diag(self.diag) if isinstance(self.diag, Vector) else self.diag * jnp.eye(self._dim))
 
     def logdet(
         self,
