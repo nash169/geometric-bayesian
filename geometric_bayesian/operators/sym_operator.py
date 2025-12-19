@@ -39,6 +39,7 @@ class SymOperator(LinearOperator):
         """
         if method == 'symeig':
             d, v = jnp.linalg.eigh(self.dense()._mat)
+            d, v = jnp.flip(d), jnp.flip(v, axis=1)
         elif method == 'lanczos':
             assert num_modes is not None
             key, subkey = jax.random.split(rng_key if rng_key is not None else jax.random.key(0))
@@ -47,11 +48,11 @@ class SymOperator(LinearOperator):
             v = jnp.matmul(v.T, eigvec_tridiagonal(subkey, alpha, beta, d))
         elif method == 'lobpcg':
             assert num_modes is not None and num_iterations is not None
-            mv_batch = jax.vmap(self, in_axes=(1,), out_axes=1)
-            d, v, _ = lobpcg_standard(mv_batch, jax.random.uniform(rng_key if rng_key is not None else jax.random.key(0),
+            # mv_batch = jax.vmap(self, in_axes=(1,), out_axes=1)
+            d, v, _ = lobpcg_standard(self, jax.random.uniform(rng_key if rng_key is not None else jax.random.key(0),
                                       shape=(self.shape[0], num_modes)), m=num_iterations, tol=tol)
         else:
-            msg = "provide valid method ['lanczos', 'lobpcg']"
+            msg = "provide valid method ['symeig', 'lanczos', 'lobpcg']"
             ValueError(msg)
         return d, v
 
