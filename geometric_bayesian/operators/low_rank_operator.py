@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from geometric_bayesian.operators.dense_operator import DenseOperator
 import jax.numpy as jnp
 
 from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, Optional
+from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, Optional, Self
 
 
 class LowRankOperator(LinearOperator):
@@ -45,9 +46,9 @@ class LowRankOperator(LinearOperator):
         r"""
         Return solve of the linear operator
         """
-        inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
-        return self.right @ ((self.left.T @ vec) * inv_d)
-        # return self.right @ ((self.left.T @ vec) / self.diag)
+        # inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
+        # return self.right @ ((self.left.T @ vec) * inv_d)
+        return self.right @ ((self.left.T @ vec) / self.diag)
 
     def logdet(
         self,
@@ -68,11 +69,12 @@ class LowRankOperator(LinearOperator):
 
     def dense(
         self,
-    ) -> Matrix:
+    ) -> DenseOperator:
         r"""
         Return dense matrix representation of the linear operator
         """
-        return (self.right * self.diag) @ self.left.T
+        # return (self.right * self.diag) @ self.left.T
+        return DenseOperator((self.right * self.diag) @ self.left.T)
 
     def inverse(
             self
@@ -84,3 +86,17 @@ class LowRankOperator(LinearOperator):
             self
     ) -> LinearOperator:
         return LowRankOperator(diag=jnp.sqrt(self.diag), right=self.right, left=self.left)
+
+    def topcut(
+        self,
+        num_modes
+    ) -> Self:
+        self.diag, self.right, self.left = self.diag[:num_modes], self.right[:, :num_modes], self.left[:, :num_modes]
+        return self
+
+    def bottomcut(
+        self,
+        num_modes
+    ) -> Self:
+        self.diag, self.right, self.left = self.diag[-num_modes:], self.right[:, -num_modes:], self.left[:, -num_modes:]
+        return self
