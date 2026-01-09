@@ -90,3 +90,8 @@ class DiagOperator(SymOperator):
         Return x^T A^-1 x for the linear operator A
         """
         return vec.T @ (vec / self.diag)
+
+    def squareroot(
+            self
+    ) -> LinearOperator:
+        return DiagOperator(diag=jnp.sqrt(self.diag), dim=self._dim)
