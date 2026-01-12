@@ -25,9 +25,9 @@ def simple_plot(
 
     if isinstance(fn, Callable):
         x = jnp.linspace(range[0], range[1], res)
-        ax.plot(x, fn(x))
+        ax.plot(x, fn(x), **kwargs)
     else:
-        ax.plot(*fn)
+        ax.plot(*fn, **kwargs)
 
     ax.set_xlim(range[0], range[1])
 
