@@ -1,5 +1,6 @@
 """Plotting utilities."""
 
+from typing import Tuple
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ from geometric_bayesian.utils.types import Callable
 
 
 def simple_plot(
-    fn: Callable | jax.Array,
+    fn: Callable | Tuple,
     range=[-1, 1],
     res=100,
     fig=None,
@@ -22,32 +23,37 @@ def simple_plot(
         ax = fig.get_axes()[0]
     else:
         fig, ax = plt.subplots()
+        fig.tight_layout()
 
     if isinstance(fn, Callable):
         x = jnp.linspace(range[0], range[1], res)
-        ax.plot(x, fn(x), **kwargs)
+        ax.plot(x, fn(x.reshape(-1, 1)), **kwargs)
+        ax.set_xlim(range[0], range[1])
     else:
         ax.plot(*fn, **kwargs)
+        ax.set_xlim(fn[0].min(), fn[0].max())
 
-    ax.set_xlim(range[0], range[1])
-
-    fig.tight_layout()
     return fig
 
 
 def scatter_plot(data, ranges=None, fig=None, **kwargs):
     dim = data.shape[0] if len(data.shape) == 1 else data.shape[1]
+
     if fig is not None:
         ax = fig.get_axes()[0]
     else:
         fig = plt.figure()
+        fig.tight_layout()
         ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
+
     ax.scatter(*data.T, **kwargs)
+
     if ranges is not None:
         ax.set_xlim(*ranges[0])
         ax.set_ylim(*ranges[1])
         if dim == 3:
             ax.set_zlim(*ranges[2])
+
     return fig
 
 
