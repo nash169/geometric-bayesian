@@ -71,7 +71,7 @@ class DiagOperator(SymOperator):
         r"""
         Return determinant of the linear operator
         """
-        return jnp.sum(jnp.log(self.diag)) if isinstance(self.diag, jax.Array) else self._dim * jnp.log(self.diag)
+        return self._dim * jnp.log(self.diag) if isinstance(self.diag, Scalar) else jnp.sum(jnp.log(self.diag))
 
     def inverse(
         self,
