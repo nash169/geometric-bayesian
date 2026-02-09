@@ -6,16 +6,20 @@ from geometric_bayesian.utils.helper import (
 )
 
 from geometric_bayesian.utils.plot import (
-    simple_plot,
-    scatter_plot,
-    quiver_plot,
-    contour_plot,
-    surf_plot,
+    plot,
+    scatter,
+    quiver,
+    contour,
+    surf,
 )
 
-from geometric_bayesian.utils.math import gram
+from geometric_bayesian.utils.math import (
+    gram
+)
 
-from geometric_bayesian.utils.train import train
+from geometric_bayesian.utils.train import (
+    train
+)
 
 __all__ = [
 ]

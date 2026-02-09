@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import combinations
 
-from numpy import base_repr
+from numpy import base_repr, isin
 
 from geometric_bayesian.utils.types import Callable
 
 
-def simple_plot(
+def plot(
     fn: Callable | Tuple,
     range=[-1, 1],
     res=100,
@@ -36,17 +36,36 @@ def simple_plot(
     return fig
 
 
-def scatter_plot(data, ranges=None, fig=None, **kwargs):
+def scatter(
+        data,
+        ranges=None,
+        axes_labels=None,
+        ax=None,
+        fig=None,
+        **kwargs
+):
     dim = data.shape[0] if len(data.shape) == 1 else data.shape[1]
 
-    if fig is not None:
-        ax = fig.get_axes()[0]
-    else:
-        fig = plt.figure()
-        fig.tight_layout()
-        ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
+    if ax is None:
+        if fig is None:
+            fig = plt.figure()
+        # fig.patch.set_visible(False)
+        # fig.tight_layout()
+        try:
+            ax = fig.get_axes()[-1]
+        except:
+            ax = fig.add_subplot(111, projection='3d' if dim == 3 else None)
 
-    ax.scatter(*data.T, **kwargs)
+    im = ax.scatter(*data.T, **kwargs)
+    ax.set_aspect('equal', 'box')
+    if not im.get_label().startswith("_"):
+        ax.legend()
+
+    if axes_labels is not None:
+        ax.set_xlabel(axes_labels[0])
+        ax.set_ylabel(axes_labels[1])
+        if dim == 3:
+            ax.set_zlabel(axes_labels[2])
 
     if ranges is not None:
         ax.set_xlim(*ranges[0])
@@ -54,10 +73,10 @@ def scatter_plot(data, ranges=None, fig=None, **kwargs):
         if dim == 3:
             ax.set_zlim(*ranges[2])
 
-    return fig
+    return fig if fig is not None else ax
 
 
-def quiver_plot(vecs, origin=None, ranges=None, fig=None, **kwargs):
+def quiver(vecs, origin=None, ranges=None, fig=None, **kwargs):
     dim = vecs.shape[0] if len(vecs.shape) == 1 else vecs.shape[0]
     if fig is not None:
         ax = fig.get_axes()[0]
@@ -74,6 +93,190 @@ def quiver_plot(vecs, origin=None, ranges=None, fig=None, **kwargs):
         if dim == 3:
             ax.set_zlim(*ranges[2])
     return fig
+
+
+def contour(
+    fn,
+    ranges=None,
+    res=50,
+    axes_labels=None,
+    iso_view=False,
+    cbar=None,
+    reduce_fn=jnp.sum,
+    ax=None,
+    fig=None,
+    **kwargs
+):
+    if isinstance(fn, Callable):
+        assert ranges is not None, "provide grid ranges"
+        dim = len(ranges)
+        grids = [jnp.linspace(start, end, res) for (start, end) in ranges]
+        mesh = jnp.meshgrid(*grids, indexing='ij')
+        p_args = [*mesh, fn(jnp.stack([g.ravel() for g in mesh], axis=-1)).reshape(mesh[0].shape)]
+    else:
+        dim = len(fn) - 1
+        p_args = fn
+
+    if dim > 2:
+        pairs = list(combinations(range(dim), 2))
+        n_plots = len(pairs)
+        ncols = int(jnp.ceil(jnp.sqrt(n_plots)))
+        nrows = int(jnp.ceil(n_plots / ncols))
+        if fig is None:
+            fig, axs = plt.subplots(nrows, ncols)
+            fig.patch.set_visible(False)
+            fig.tight_layout()
+        axs = [item for row in axs for item in row]
+
+        for idx, (i, j) in enumerate(pairs):
+            ax = axs[idx]
+
+            reduce_axes = tuple(k for k in range(dim) if k not in (i, j))
+            F_proj = reduce_fn(p_args[-1], axis=reduce_axes)
+
+            Xi, Xj = jnp.meshgrid(grids[i], grids[j], indexing='ij')
+            im = ax.contourf(Xi, Xj, F_proj, levels=500, cmap="Spectral", **kwargs)
+            if iso_view:
+                ax.contour(Xi, Xj, F_proj, 10, cmap=None, colors='#f2e68f')
+            ax.set_aspect('equal', 'box')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.spines['left'].set_visible(False)
+            ax.set_xticks([Xi.min(), Xi.max()])
+            ax.set_yticks([Xj.min(), Xj.max()])
+            ax.set_xlim([Xi.min(), Xi.max()])
+            ax.set_ylim([Xj.min(), Xj.max()])
+            # ax.yaxis.set_label_position("right")
+            # ax.yaxis.tick_right()
+            if axes_labels is not None:
+                ax.set_xlabel(axes_labels[i], fontsize=20, labelpad=-15)
+                ax.set_ylabel(axes_labels[j], fontsize=20, labelpad=-20)
+            if cbar is not None:
+                colorbar(im, fig, ax, pad=0.1, **cbar)
+
+        for ax in axs[n_plots:]:
+            ax.axis('off')
+    else:
+        if ax is None:
+            if fig is None:
+                fig = plt.figure()
+            fig.patch.set_visible(False)
+            fig.tight_layout()
+            try:
+                ax = fig.get_axes()[-1]
+            except:
+                ax = fig.add_subplot(111)
+
+        im = ax.contourf(*p_args, 500, cmap="Spectral", **kwargs)
+        if iso_view:
+            ax.contour(*p_args, 10, cmap=None, colors='#f2e68f')
+        ax.set_aspect('equal', 'box')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.set_xticks([p_args[0].min(), p_args[0].max()])
+        ax.set_yticks([p_args[1].min(), p_args[1].max()])
+        ax.set_xlim([p_args[0].min(), p_args[0].max()])
+        ax.set_ylim([p_args[1].min(), p_args[1].max()])
+        # ax.yaxis.set_label_position("right")
+        # ax.yaxis.tick_right()
+        if axes_labels is not None:
+            ax.set_xlabel(axes_labels[0], fontsize=20, labelpad=-10)
+            ax.set_ylabel(axes_labels[1], fontsize=20, labelpad=-10)
+        if cbar is not None:
+            assert fig is not None, "provide fiure handle to add colorbar"
+            colorbar(im, fig, ax, **cbar)
+
+    return fig if fig is not None else ax
+
+
+def surf(
+    fn,
+    ranges=None,
+    res=50,
+    axes_labels=None,
+    cbar=None,
+    reduce_fn=jnp.sum,
+    ax=None,
+    fig=None,
+    **kwargs
+):
+    if isinstance(fn, Callable):
+        assert ranges is not None, "provide grid ranges"
+        dim = len(ranges)
+        grids = [jnp.linspace(start, end, res) for (start, end) in ranges]
+        mesh = jnp.meshgrid(*grids, indexing='ij')
+        p_args = [*mesh, fn(jnp.stack([g.ravel() for g in mesh], axis=-1)).reshape(mesh[0].shape)]
+    else:
+        dim = len(fn) - 1
+        p_args = fn
+
+    if dim > 2:
+        pairs = list(combinations(range(dim), 2))
+        n_plots = len(pairs)
+        ncols = int(jnp.ceil(jnp.sqrt(n_plots)))
+        nrows = int(jnp.ceil(n_plots / ncols))
+        if fig is None:
+            fig = plt.figure()
+            fig.patch.set_visible(False)
+            fig.tight_layout()
+
+        for idx, (i, j) in enumerate(pairs):
+            ax = fig.add_subplot(nrows, ncols, idx + 1, projection='3d')
+
+            reduce_axes = tuple(k for k in range(dim) if k not in (i, j))
+            F_proj = reduce_fn(p_args[-1], axis=reduce_axes)
+
+            Xi, Xj = jnp.meshgrid(grids[i], grids[j], indexing='ij')
+            im = ax.plot_surface(Xi, Xj, F_proj, cmap="Spectral", antialiased=True, alpha=0.8,)
+            # ax.axis('off')
+            ax.set_box_aspect((jnp.ptp(Xi), jnp.ptp(Xj), jnp.ptp(F_proj)))
+            ax.set_xticks([Xi.min(), Xi.max()])
+            ax.set_yticks([Xj.min(), Xj.max()])
+            if axes_labels is not None:
+                ax.set_xlabel(axes_labels[i], fontsize=20, labelpad=-15)
+                ax.set_ylabel(axes_labels[j], fontsize=20, labelpad=-20)
+                ax.set_ylabel(axes_labels[-1], fontsize=20, labelpad=-20)
+            if cbar is not None:
+                colorbar(im, fig, ax, pad=0.1, **cbar)
+    else:
+        if ax is None:
+            if fig is None:
+                fig = plt.figure()
+            fig.patch.set_visible(False)
+            fig.tight_layout()
+            try:
+                ax = fig.get_axes()[-1]
+            except:
+                ax = fig.add_subplot(111, projection='3d', computed_zorder=False)
+
+        im = ax.plot_surface(*p_args, cmap="Spectral", antialiased=True, alpha=0.8,)
+        # ax.axis('off')
+        ax.set_box_aspect((jnp.ptp(p_args[0]), jnp.ptp(p_args[1]), jnp.ptp(p_args[2])))
+        ax.set_xticks([p_args[0].min(), p_args[0].max()])
+        ax.set_yticks([p_args[1].min(), p_args[1].max()])
+        if axes_labels is not None:
+            ax.set_xlabel(axes_labels[0], fontsize=20)
+            ax.set_ylabel(axes_labels[1], fontsize=20)
+            ax.set_zlabel(axes_labels[2], fontsize=20)
+        if cbar is not None:
+            assert fig is not None, "provide fiure handle to add colorbar"
+            colorbar(im, fig, ax, **cbar)
+
+    return fig if fig is not None else ax
+
+
+def colorbar(im, fig, ax, pos="right", size="8%", pad=0.4, label=None, labelpad=5, ticks=None):
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes(pos, size=size, pad=pad)
+    cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
+    cax.yaxis.set_ticks_position(pos)
+    cbar.outline.set_visible(False)
+    cbar.set_ticks([0.0])
+    if label is not None:
+        cbar.set_label('$' + label + '$', fontsize=18, rotation=0, labelpad=labelpad)
 
 
 def contour_plot(
@@ -203,7 +406,7 @@ def surf_plot(fn, min=[-1, -1], max=[1, 1], res=100, fig_ax=None, **kwargs):
     return fig
 
 
-def _colorbar(im, fig, ax, pos="left", size="8%", pad=0.4, label=None, labelpad=-50, ticks=None):
+def _colorbar(im, fig, ax, pos="right", size="8%", pad=0.4, label=None, labelpad=-50, ticks=None):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes(pos, size=size, pad=pad)
     cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
