@@ -10,6 +10,7 @@ def train(
     loss_fn,
     params: dict,
     opt=optax.adam,
+    key=None,
     verbose: bool = False,
     record: bool = False
 ):
@@ -19,18 +20,30 @@ def train(
     optimizer = nnx.Optimizer(model, opt(params["lr"]), wrt=nnx.Param)
     iters = tqdm.tqdm(range(params["n_iters"]), desc="Epoch", disable=not verbose)
 
-    @nnx.jit
-    def step(model, optimizer, x, y):
-        loss, grads = nnx.value_and_grad(loss_fn, argnums=nnx.DiffState(0, nnx.Param))(
-            model, x, y
-        )
-        optimizer.update(model, grads)
-        return loss
+    if key is None:
+        @nnx.jit
+        def step(model, optimizer, x, y):
+            loss, grads = nnx.value_and_grad(loss_fn, argnums=nnx.DiffState(0, nnx.Param))(
+                model, x, y
+            )
+            optimizer.update(model, grads)
+            return loss
+    else:
+        @nnx.jit
+        def step(model, optimizer, x, y, key):
+            (loss, key), grads = nnx.value_and_grad(loss_fn, argnums=nnx.DiffState(0, nnx.Param), has_aux=True)(
+                model, x, y, key
+            )
+            optimizer.update(model, grads)
+            return loss, key
 
     loss_log, weights_log = [], []
     for i in iters:
         for x_tr, y_tr in dataloader:
-            loss = step(model, optimizer, x_tr, y_tr)
+            if key is None:
+                loss = step(model, optimizer, x_tr, y_tr)
+            else:
+                loss, key = step(model, optimizer, x_tr, y_tr, key)
             if verbose:
                 iters.set_postfix({"Loss": loss.item()})
             if record:
