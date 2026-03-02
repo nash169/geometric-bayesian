@@ -17,6 +17,7 @@ class MLP(nnx.Module):
         layers: List[int],
         nl: Optional[Callable] = nnx.tanh,
         la: Optional[Callable] = None,
+        seed: int = 0,
         **kwargs
     ):
         r"""
@@ -27,7 +28,7 @@ class MLP(nnx.Module):
             nl: Non-linear activation function, e.g. nnx.tanh, nnx.relu
             la: Last layer activation function, e.g. nnx.sigmoid (binary classification), nnx.softmax (multi-class classification)
         """
-        rngs = nnx.Rngs(params=0)
+        rngs = nnx.Rngs(seed)
         self.layers = nnx.List([nnx.Linear(m, n, rngs=rngs, **kwargs) for m, n in zip(layers[:-1], layers[1:])])
         if nl is not None:
             self.nl = nl
@@ -69,6 +70,13 @@ class MLP(nnx.Module):
             model_lin = jax.linearize(lambda pvar: nnx.call((graph_def, pvar))(x)[0], array_to_pytree(p, params))[1]
             return wrap_pytree_function(model_lin, params)
         return jvp_fwd
+
+    def linearized(
+        self
+    ) -> Callable:
+        def fwd_linearized(x, p):
+            return self(x) + self.jvp()(x, p)(p - self.params)
+        return fwd_linearized
 
     def jtvp(
         self
