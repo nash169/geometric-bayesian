@@ -100,7 +100,7 @@ def contour(
     ranges=None,
     res=50,
     axes_labels=None,
-    iso_view=False,
+    isolines=None,
     cbar=None,
     reduce_fn=jnp.sum,
     ax=None,
@@ -135,9 +135,9 @@ def contour(
             F_proj = reduce_fn(p_args[-1], axis=reduce_axes)
 
             Xi, Xj = jnp.meshgrid(grids[i], grids[j], indexing='ij')
-            im = ax.contourf(Xi, Xj, F_proj, levels=500, cmap="Spectral", **kwargs)
-            if iso_view:
-                ax.contour(Xi, Xj, F_proj, 10, cmap=None, colors='#f2e68f')
+            im = ax.contourf(Xi, Xj, F_proj, **kwargs)
+            if isolines is not None:
+                ax.contour(Xi, Xj, F_proj, cmap=None, colors='#f2e68f', **isolines)
             ax.set_aspect('equal', 'box')
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
@@ -168,9 +168,9 @@ def contour(
             except:
                 ax = fig.add_subplot(111)
 
-        im = ax.contourf(*p_args, 500, cmap="Spectral", **kwargs)
-        if iso_view:
-            ax.contour(*p_args, 10, cmap=None, colors='#f2e68f')
+        if isolines is not None:
+            ax.contour(*p_args, cmap=None, colors='#f2e68f', **isolines)
+        im = ax.contourf(*p_args, **kwargs)
         ax.set_aspect('equal', 'box')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -271,10 +271,13 @@ def surf(
 def colorbar(im, fig, ax, pos="right", size="8%", pad=0.4, label=None, labelpad=5, ticks=None):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes(pos, size=size, pad=pad)
+    if ticks is None:
+        vmin, vmax = im.get_clim()
+        ticks = [jnp.round(vmin, 2), jnp.round(vmax, 2)]
     cbar = fig.colorbar(im, cax=cax, ticks=ticks, orientation='vertical')
     cax.yaxis.set_ticks_position(pos)
     cbar.outline.set_visible(False)
-    cbar.set_ticks([0.0])
+    # cbar.set_ticks([0.0])
     if label is not None:
         cbar.set_label('$' + label + '$', fontsize=18, rotation=0, labelpad=labelpad)
 
