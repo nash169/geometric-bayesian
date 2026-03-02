@@ -42,13 +42,12 @@ class MultivariateNormal(AbstractDensity):
 
     def sample(
         self,
-        rng_key: Optional[Key] = None,
-        size: Optional[Int] = 1,
+        size: Int = 1,
+        seed: Int = 0,
         **kwargs
     ):
-        if rng_key is None:
-            rng_key = jax.random.key(0)
-        rv = jax.random.normal(key=rng_key, shape=(self._cov.shape[0], ) if size == 1 else (self._cov.shape[0], size))
+        key = jax.random.key(seed)
+        rv = jax.random.normal(key=key, shape=(self._cov.shape[0], ) if size == 1 else (self._cov.shape[0], size))
         samples = self._cov.squareroot(**kwargs) @ rv
         if hasattr(self, "_mean"):
             samples += self._mean if size == 1 else self._mean[:, None]
