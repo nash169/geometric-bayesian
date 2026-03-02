@@ -68,3 +68,11 @@ class DenseOperator(LinearOperator):
         Return dense matrix representation of the linear operator
         """
         return self._mat
+
+    def diag(
+        self,
+    ) -> Vector:
+        r"""
+        Return determinant of the linear operator
+        """
+        return self._mat.diagonal()
