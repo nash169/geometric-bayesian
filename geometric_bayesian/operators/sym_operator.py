@@ -20,9 +20,9 @@ class SymOperator(LinearOperator):
 
     # def diagonalize(self, **kwargs) -> tuple[Vector, Matrix]:
     #     from geometric_bayesian.linalg.diagonalize import diagonalize
-    #     dim = self.shape[0]
-    #     if not isinstance(dim, int):
-    #         dim = jnp.array(dim, int)  # force conversion to Python int, if shape is static
+    #     # dim = self.shape[0]
+    #     # if not isinstance(dim, int):
+    #     #     dim = jnp.array(dim, int)  # force conversion to Python int, if shape is static
     #     return diagonalize(self, self.shape[0], **kwargs)
 
     def diagonalize(
