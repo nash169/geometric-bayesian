@@ -84,12 +84,13 @@ class PSDOperator(SymOperator):
 
     def invquad(
         self,
-        vec: Vector
+        vec: Vector,
+        **kwargs
     ) -> Scalar:
         r"""
         Return x^T A^-1 x for the linear operator A
         """
-        return super().invquad(vec) if isinstance(self._op, Callable) else jnp.sum(jnp.pow(jax.scipy.linalg.solve_triangular(self._op, vec, lower=True), 2))
+        return super().invquad(vec, **kwargs) if isinstance(self._op, Callable) else jnp.sum(jnp.pow(jax.scipy.linalg.solve_triangular(self._op, vec, lower=self._op_is_tril), 2))
 
     def dense(
         self,
