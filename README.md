@@ -53,9 +53,23 @@ For local installation in the current directory
 ```sh
 pip(pip3) install -e .
 ```
+
+## Running locally
 It also supports `uv`
 ```sh
 uv sync && source .venv/bin/activate
+```
+Run scripts as python modules
+```sh
+python -m <path/to>.<script>
+```
+To use jupyter-lab, generate the `.ipynb` with
+```sh
+jupytext --to ipynb <script>.py
+```
+Pair and sync the `.ipynb` and `.py`
+```sh
+jupytext --set-formats ipynb,py:percent <script>.ipynb
 ```
 
 #### Some useful link:
