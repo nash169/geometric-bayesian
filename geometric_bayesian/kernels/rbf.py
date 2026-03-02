@@ -8,7 +8,7 @@ from geometric_bayesian.utils.types import Vector, Float, Optional, Scalar
 def rbf(
     x: Scalar | Vector,
     y: Scalar | Vector,
-    l: Optional[Float] = 1.0,
-    tau: Optional[Float] = 1.0,
+    l: Scalar,
+    tau: Scalar = 1.0,
 ):
-    return tau * jnp.exp(-.5 * jnp.sum(jnp.pow(x - y, 2)) / l)
+    return jnp.exp(tau) * jnp.exp(-.5 * jnp.sum(jnp.pow(x - y, 2)) / jnp.square(jnp.exp(l)))
