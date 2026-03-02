@@ -12,11 +12,11 @@ from jax.experimental.sparse.linalg import lobpcg_standard
 def diagonalize(
     mv: Callable,
     dim: Int,
-    rng_key: Optional[Key] = None,
-    method: Optional[str] = 'symeig',
+    method: str = 'symeig',
     num_modes: Optional[Int] = None,
-    num_iterations: Optional[Int] = 100,
-    tol: Optional[Float] = None
+    num_iters: Int = 100,
+    tol: Float = 1e-4,
+    rng_key: Optional[Key] = None,
 ) -> Tuple[Vector, Matrix]:
     r"""
     Return eigenvalues of the linear operator
@@ -33,10 +33,10 @@ def diagonalize(
         d = jax.scipy.linalg.eigh_tridiagonal(alpha, beta, eigvals_only=True)
         v = jnp.matmul(v.T, eigvec_tridiagonal(subkey, alpha, beta, d))
     elif method == 'lobpcg':
-        assert num_modes is not None and num_iterations is not None
+        assert num_modes is not None
         mv_batch = jax.vmap(mv, in_axes=(1,), out_axes=1)
         d, v, _ = lobpcg_standard(mv_batch, jax.random.uniform(rng_key if rng_key is not None else jax.random.key(0),
-                                  shape=(dim, num_modes)), m=num_iterations, tol=tol)
+                                  shape=(dim, num_modes)), m=num_iters, tol=tol)
     else:
         msg = "provide valid method ['symeig', 'lanczos', 'lobpcg']"
         ValueError(msg)
