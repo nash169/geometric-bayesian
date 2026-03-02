@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import math
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Int, Scalar, Vector, Optional, Tuple
+from geometric_bayesian.utils.types import Int, Scalar, Tuple
 
 
 class Bernoulli:
     def __init__(
         self,
         mu: Scalar,
-        logits: Optional[bool] = True
+        logits: bool = True
     ) -> None:
         r"""
         Define Bernoulli distribution.
@@ -26,6 +25,25 @@ class Bernoulli:
         log_sig_mu = jax.nn.log_sigmoid(self._mu) if self._logits else jnp.log(self._mu)
         log_sig_not_mu = jax.nn.log_sigmoid(-self._mu) if self._logits else jnp.log(1 - self._mu)
         return x * log_sig_mu + (1 - x) * log_sig_not_mu
+
+    def mean(
+        self,
+    ) -> Scalar:
+        return jax.nn.sigmoid(self._mu) if self._logits else self._mu
+
+    def var(
+        self,
+    ) -> Scalar:
+        m = self.mean()
+        return m * (1 - m)
+
+    def sample(
+        self,
+        size: Int = 1,
+        seed: Int = 0,
+        **kwargs
+    ):
+        return jax.random.bernoulli(jax.random.key(seed), p=self._mu, shape=(size,), **kwargs)
 
     def jvp(
         self,
