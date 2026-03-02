@@ -3,74 +3,67 @@
 
 import jax
 import jax.numpy as jnp
-from flax import nnx
-from geometric_bayesian.utils.types import Callable, Int, Optional, Matrix
-from geometric_bayesian.utils.helper import wrap_pytree_function
+import inspect
+from functools import wraps
+from geometric_bayesian.utils.types import Callable, Matrix
 from geometric_bayesian.densities.abstract_density import AbstractDensity
 
-
-def pred_posterior_mean(
-    model,
-    posterior: AbstractDensity | Matrix,
-    size: Optional[Int] = 100,
-    **kwargs
-):
-    params_samples = posterior.sample(size=size, **kwargs) if isinstance(posterior, AbstractDensity) else posterior
-
-    graph_def, map_params = nnx.split(model)
-
-    def model_fn(x):
-        return jax.vmap(
-            wrap_pytree_function(
-                lambda params: nnx.call((graph_def, params))(x.reshape(x.shape[0], -1))[0],
-                map_params
-            ),
-            in_axes=1
-        )(params_samples)
-
-    return lambda x: jax.nn.sigmoid(model_fn(x)).mean(axis=0)
+from flax import nnx
+from geometric_bayesian.utils.helper import wrap_pytree_function
+from geometric_bayesian.utils.types import Optional, Int
 
 
-def pred_posterior_std(
-    model,
-    posterior: AbstractDensity | Matrix,
-    size: Optional[Int] = 100,
-    **kwargs
-):
-    params_samples = posterior.sample(size=size, **kwargs) if isinstance(posterior, Callable) else posterior
-
-    graph_def, map_params = nnx.split(model)
-
-    def model_fn(x):
-        return jax.vmap(
-            wrap_pytree_function(
-                lambda params: nnx.call((graph_def, params))(x.reshape(x.shape[0], -1))[0],
-                map_params
-            ),
-            in_axes=1
-        )(params_samples)
-
-    return lambda x: jax.nn.sigmoid(model_fn(x)).std(axis=0)
-
-
-def pred_posterior(
-        model,
-        posterior: AbstractDensity | Matrix,
-        likelihood: Callable,
-        size: Optional[Int] = 100,
+def mc(
+        fn: Callable,
+        p: AbstractDensity | Matrix,
+        n_samples: int = 100,
+        reduce_fn: Callable = jnp.mean,
         **kwargs
 ):
-    params_samples = posterior.sample(size=size, **kwargs) if isinstance(posterior, Callable) else posterior
+    fn_params = list(inspect.signature(fn).parameters.values())
+    samples = p.sample(size=n_samples, **kwargs) if isinstance(p, AbstractDensity) else p
 
-    graph_def, map_params = nnx.split(model)
+    if len(fn_params) == 1:
+        return jax.vmap(fn)(samples).mean()
+    else:
+        def fn_vmap(*args):
+            f = lambda x: fn(*args, **{fn_params[-1].name: x})
+            return reduce_fn(jax.vmap(f)(samples), axis=0)
+        return fn_vmap
 
-    def model_fn(x):
-        return jax.vmap(
-            wrap_pytree_function(
-                lambda params: nnx.call((graph_def, params))(x.reshape(-1))[0],
-                map_params
-            ),
-            in_axes=1
-        )(params_samples)
 
-    return lambda x, y: jax.vmap(lambda mu, y: likelihood(mu)(y), in_axes=(0, None))(model_fn(x), y).mean()
+def mc_mean(
+        fn: Callable,
+        p: AbstractDensity | Matrix,
+        n_samples: int = 100,
+        **kwargs
+):
+    sig = inspect.signature(fn)
+
+    @wraps(fn)
+    def mean_fn(*args, **kwargs):
+        return fn(*args, **kwargs).mean()
+    mean_fn.__signature__ = sig
+
+    return mc(mean_fn, p, n_samples, **kwargs)
+
+
+def mc_var(
+        fn: Callable,
+        p: AbstractDensity | Matrix,
+        n_samples: int = 100,
+        **kwargs
+):
+    sig = inspect.signature(fn)
+
+    @wraps(fn)
+    def var_fn(*args, **kwargs):
+        return fn(*args, **kwargs).var()
+    var_fn.__signature__ = sig
+
+    # expectation of the variance
+    exp_var = mc(var_fn, p, n_samples, **kwargs)
+    # variance of expectation
+    var_exp = mc_mean(fn, p, n_samples, reduce_fn=jnp.std, **kwargs)
+
+    return lambda *args: exp_var(*args) + var_exp(*args)
