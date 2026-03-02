@@ -2,12 +2,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from typing import Callable
 import jax
 import jax.numpy as jnp
 
 from geometric_bayesian.utils.types import Size, Scalar, Array, Vector, Matrix, Self
 from geometric_bayesian.operators.linear_operator import LinearOperator
 from geometric_bayesian.operators import *
+from jax.scipy.sparse.linalg import cg
 
 
 class SumOperator(LinearOperator):
@@ -36,10 +38,7 @@ class SumOperator(LinearOperator):
         r"""
         Return matrix-vector multiplication of the linear operator
         """
-        y = jnp.zeros(self.size()[0])
-        for op in self._ops:
-            y += op.mv(vec)
-        return y
+        return self._ops[0](vec) + self._ops[1](vec)
 
     def transpose(
         self,
@@ -66,7 +65,10 @@ class SumOperator(LinearOperator):
             from geometric_bayesian.linalg.woodbury_solve import woodbury_chol_solve
             psd_op = [op for op in self._ops if isinstance(op, PSDOperator)][0]
             diag_op = [op for op in self._ops if isinstance(op, DiagOperator)][0]
-            return woodbury_chol_solve(psd_op._op, diag_op.diag, vec)
+            if isinstance(psd_op._op, Callable):
+                return cg(lambda v: psd_op(v) + diag_op.diag * v, vec, **kwargs)[0]
+            else:
+                return woodbury_chol_solve(psd_op._op, diag_op.diag, vec)
         else:
             raise NotImplementedError(f"Method not implemented.")
 
