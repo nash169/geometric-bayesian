@@ -61,6 +61,30 @@ class LinearOperator(ABC):
         from geometric_bayesian.operators.dense_operator import DenseOperator
         return DenseOperator(self(jnp.eye(self.size()[1])))
 
+    def diag(
+        self,
+        method: str = 'hutchpp',
+        seed: int = 0,
+        **kwargs
+    ) -> Vector:
+        r"""
+        Return solve of the linear operator
+        """
+        from geometric_bayesian.utils.math import diag_exact, diag_hutch, diag_hutchpp
+        warnings.warn("Default `diag` method.")
+
+        m, n = self.size()
+        assert m == n
+
+        if method == 'exact':
+            return diag_exact(self.mv, m)
+        elif method == 'hutch':
+            return diag_hutch(self.mv, m, jax.random.key(seed), **kwargs)
+        elif method == 'hutchpp':
+            return diag_hutchpp(self.mv, m, jax.random.key(seed), **kwargs)
+        else:
+            raise NotImplementedError(f'Method "{method}" not implemented')
+
     def solve(
         self,
         vec: Vector,
@@ -80,7 +104,7 @@ class LinearOperator(ABC):
         r"""
         Return x^T A^-1 x for the linear operator A
         """
-        warnings.warn("Default `invquad` methods.")
+        # warnings.warn("Default `invquad` methods.")
         return jnp.dot(vec, self.solve(vec, **kwargs))
 
     def logdet(
