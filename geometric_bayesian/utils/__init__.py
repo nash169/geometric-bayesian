@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from geometric_bayesian.utils.helper import (
-    DataLoader,
-)
-
 from geometric_bayesian.utils.plot import (
     plot,
     scatter,
@@ -18,6 +14,8 @@ from geometric_bayesian.utils.math import (
 )
 
 from geometric_bayesian.utils.train import (
+    OptCfg,
+    TrainCfg,
     train
 )
 
