@@ -1,6 +1,6 @@
 """Plotting utilities."""
 
-from typing import Tuple
+from typing import Optional, Tuple
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -9,11 +9,12 @@ from itertools import combinations
 
 from numpy import base_repr, isin
 
-from geometric_bayesian.utils.types import Callable
+from geometric_bayesian.utils.types import Callable, Vector
 
 
 def plot(
     fn: Callable | Tuple,
+    fn_between: Optional[Callable | Vector] = None,
     range=[-1, 1],
     res=100,
     fig=None,
@@ -27,11 +28,27 @@ def plot(
 
     if isinstance(fn, Callable):
         x = jnp.linspace(range[0], range[1], res)
-        ax.plot(x, fn(x.reshape(-1, 1)), **kwargs)
-        ax.set_xlim(range[0], range[1])
+        p_args = [x, fn(x.reshape(-1, 1)).squeeze()]
     else:
-        ax.plot(*fn, **kwargs)
-        ax.set_xlim(fn[0].min(), fn[0].max())
+        p_args = fn
+
+    im = ax.plot(*p_args, **kwargs)
+    ax.set_xlim(p_args[0].min(), p_args[0].max())
+
+    if not im[0].get_label().startswith("_"):
+        ax.legend()
+
+    if fn_between is not None:
+        if isinstance(fn_between, Callable):
+            fn_between_eval = fn_between(p_args[0].reshape(-1, 1)).squeeze()
+            f_args = [p_args[0], p_args[1] - fn_between_eval, p_args[1] + fn_between_eval]
+        else:
+            f_args = [p_args[0], p_args[1] - fn_between, p_args[1] + fn_between]
+        ax.fill_between(
+            *f_args,
+            alpha=0.2,
+            color=im[0].get_color()
+        )
 
     return fig
 
