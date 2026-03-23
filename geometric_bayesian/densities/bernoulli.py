@@ -11,7 +11,7 @@ class Bernoulli:
     def __init__(
         self,
         mu: Scalar,
-        logits: bool = True
+        logits: bool = False
     ) -> None:
         r"""
         Define Bernoulli distribution.
