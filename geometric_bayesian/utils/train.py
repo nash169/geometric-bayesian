@@ -4,7 +4,7 @@ import jax.random as jr
 import jax.numpy as jnp
 from flax import nnx
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
 
 
 @dataclass(frozen=True)
@@ -17,12 +17,11 @@ class OptCfg:
 @dataclass(frozen=True)
 class TrainCfg:
     opt: optax.GradientTransformation
-    steps: int = 20_000
-    batch_size: int = 64
+    steps: int = 1_000
+    batch_size: Optional[int] = None
     seed: int = 0
-    batch_mode: str = "epoch"
     verbose: bool = False
-    log: str = 'info'
+    log: str = "info"
     record: bool = False
 
 
@@ -72,7 +71,6 @@ def train(
     cfg: TrainCfg,
 ):
     opt = nnx.Optimizer(model, cfg.opt, wrt=nnx.Param)
-    dataloader = DataLoader(X, y, cfg.batch_size, shuffle=True, seed=cfg.seed)
 
     @nnx.jit
     def step(model, opt, x, y):
@@ -83,14 +81,26 @@ def train(
     if cfg.record:
         log = []
 
-    iters = tqdm.tqdm(range(cfg.steps), desc="Training w/o replacement", disable=not cfg.verbose)
-    for _ in iters:
-        for x_tr, y_tr in dataloader:
-            loss = step(model, opt, x_tr, y_tr)
-        if cfg.log == 'debug':
-            iters.set_postfix({"Loss": loss.item()})
-        if cfg.record:
-            log.append(model.params)
+    iters = tqdm.tqdm(
+        range(cfg.steps), desc="Training w/o replacement", disable=not cfg.verbose
+    )
+
+    if cfg.batch_size is not None:
+        dataloader = DataLoader(X, y, cfg.batch_size, shuffle=True, seed=cfg.seed)
+        for _ in iters:
+            for x_tr, y_tr in dataloader:
+                loss = step(model, opt, x_tr, y_tr)
+            if cfg.log == "debug":
+                iters.set_postfix({"Loss": loss.item()})
+            if cfg.record:
+                log.append(model.params)
+    else:
+        for i in iters:
+            loss = step(model, opt, X, y)
+            if cfg.log == "debug" and (i % 100) == 0:
+                iters.set_postfix({"Loss": loss.item()})
+            if cfg.record:
+                log.append(model.params)
 
     return jnp.array(log) if cfg.record else loss
 
@@ -115,10 +125,14 @@ def train_batch_fixed(
     if cfg.record:
         log = []
 
-    iters = tqdm.tqdm(range(cfg.steps), desc="Training w/o replacement [Fixed batch]", disable=not cfg.verbose)
+    iters = tqdm.tqdm(
+        range(cfg.steps),
+        desc="Training w/o replacement [Fixed batch]",
+        disable=not cfg.verbose,
+    )
     for _ in iters:
         loss = step(model, opt)
-        if cfg.log == 'debug':
+        if cfg.log == "debug":
             iters.set_postfix({"Loss": loss.item()})
         if cfg.record:
             log.append(loss)
@@ -146,10 +160,12 @@ def train_batch_replacement(
         log = []
 
     keys = jr.split(jr.key(cfg.seed), cfg.steps)
-    iters = tqdm.tqdm(range(cfg.steps), desc="Training with replacement]", disable=not cfg.verbose)
+    iters = tqdm.tqdm(
+        range(cfg.steps), desc="Training with replacement]", disable=not cfg.verbose
+    )
     for t in iters:
         loss = step(model, opt, keys[t])
-        if cfg.log == 'debug':
+        if cfg.log == "debug":
             iters.set_postfix({"Loss": loss.item()})
         if cfg.record:
             log.append(loss)
@@ -164,7 +180,6 @@ def train_stochastic_loss(
     loss_fn: Callable,
     cfg: TrainCfg,
 ):
-
     opt = nnx.Optimizer(model, cfg.opt, wrt=nnx.Param)
     dataloader = DataLoader(X, y, cfg.batch_size, shuffle=True, seed=cfg.seed)
 
@@ -178,11 +193,13 @@ def train_stochastic_loss(
         log = []
 
     key = jr.key(cfg.seed)
-    iters = tqdm.tqdm(range(cfg.steps), desc="Training w/o replacement", disable=not cfg.verbose)
+    iters = tqdm.tqdm(
+        range(cfg.steps), desc="Training w/o replacement", disable=not cfg.verbose
+    )
     for _ in iters:
         for x_tr, y_tr in dataloader:
             loss, key = step(model, opt, x_tr, y_tr, key)
-        if cfg.log == 'debug':
+        if cfg.log == "debug":
             iters.set_postfix({"Loss": loss.item()})
         if cfg.record:
             log.append(loss)
