@@ -128,11 +128,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# vscode config
+# vscode
 .vscode
 
+# macos
 .DS_Store
 
-examples/data/
-examples/*.png
-tests/*.png
+# jupyter
+*.ipynb
