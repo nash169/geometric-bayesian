@@ -24,11 +24,11 @@ def mc(
     samples = p.sample(size=n_samples, **kwargs) if isinstance(p, AbstractDensity) else p
 
     if len(fn_params) == 1:
-        return jax.vmap(fn)(samples).mean()
+        return reduce_fn(jax.lax.map(fn, samples))
     else:
         def fn_vmap(*args):
             f = lambda x: fn(*args, **{fn_params[-1].name: x})
-            return reduce_fn(jax.vmap(f)(samples), axis=0)
+            return reduce_fn(jax.lax.map(f, samples), axis=0)
         return fn_vmap
 
 
@@ -64,6 +64,6 @@ def mc_var(
     # expectation of the variance
     exp_var = mc(var_fn, p, n_samples, **kwargs)
     # variance of expectation
-    var_exp = mc_mean(fn, p, n_samples, reduce_fn=jnp.std, **kwargs)
+    var_exp = mc_mean(fn, p, n_samples, reduce_fn=jnp.var, **kwargs)
 
     return lambda *args: exp_var(*args) + var_exp(*args)
