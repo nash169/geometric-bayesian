@@ -29,99 +29,69 @@ from flax import nnx
 from jax import grad, jit, vmap, random
 import optax
 import matplotlib.pyplot as plt
-# jax.config.update('jax_enable_x64', True)
 
 sys.path.insert(0, os.path.abspath(os.path.join('../')))
-
-# %%
-from geometric_bayesian.utils import DataLoader, plot_regression
-rng_key = jax.random.key(0)
-num_training_samples = 150
-batch_size = 20
-sigma_noise=0.3
-
-# Split RNG key for reproducibility
-rng_key, rng_noise = random.split(rng_key)
-
-# Generate random training data
-X_train = (
-    random.uniform(rng_key, (num_training_samples, 1)) * 10
-) 
-noise = random.normal(rng_noise, X_train.shape) * sigma_noise
-y_train = jnp.sin(X_train) + noise
-
-# Generate testing data
-X_test = jnp.linspace(-5, 15, 500).reshape(-1, 1)
-y_test = jnp.sin(X_test)
-
-# Create the training data loader
-train_loader = DataLoader(X_train, y_train.squeeze(), batch_size)
-
-# %%
 from geometric_bayesian.models import MLP
+from geometric_bayesian.utils.train import DataLoader, OptCfg, TrainCfg, train
+from geometric_bayesian.utils.helper import make_sinusoid
+from geometric_bayesian.utils.plot import plot, scatter
+
+# %%
+sinus_factor=5.0
+X_train, y_train, _, _, X_test, y_test = make_sinusoid(
+    n_train=150, n_valid=50, n_test=100,
+    interval=(-2.0,2.0),
+    noise=0.15,
+    sinus_factor=sinus_factor
+)
+
+# %%
 model = MLP(
-    layers=[1,64,1],
-    # nl = nnx.relu, # nnx.tanh
+    layers=[1, 8, 8, 1],
+    nl = nnx.tanh,
     use_bias=True,
-    # param_dtype=jax.numpy.float64
 )
 num_params = model.size
 
 # %%
-fig = plot_regression(model, X_test, y_test, X_train, y_train)
+fig = scatter(jnp.vstack((X_train, y_train)).T, color="blue", alpha=0.6, label="Training data")
+fig = scatter(jnp.vstack((X_test, y_test)).T, fig=fig, color="green", alpha=0.6, label="Test data")
+fig = plot(lambda x: jnp.sin(sinus_factor*x), fig=fig, range=[-2,2], color="black", linestyle="--", label="True function")
+fig = plot(model, fig=fig, range=[-2,2], color="red", label="Prediction")
 
 # %%
 from geometric_bayesian.densities import Normal, MultivariateNormal
 from geometric_bayesian.functions.likelihood import neg_logll
 from geometric_bayesian.operators import DiagOperator
 
-# likelihood_cov = DiagOperator(
-#     diag = jnp.array(1.), 
-#     dim = 1
-# )
-# p_ll = lambda f : MultivariateNormal(cov=likelihood_cov, mean=f)
-p_ll = lambda f : Normal(var=jnp.array(1.), mean=f)
+
+likelihood = lambda f : Normal(var=jnp.array(1.), mean=f)
 
 prior_cov = DiagOperator(
     diag = jnp.array(10.), 
     dim = num_params
 )
-p_prior = MultivariateNormal(cov=prior_cov)
+prior = MultivariateNormal(cov=prior_cov)
+
 
 # %%
-n_epochs = 1000
-step_size = 1e-2
-
-optimizer = nnx.Optimizer(model, optax.adam(step_size))
-
-# def criterion(x, y):
-#     return jnp.mean(0.5*jnp.square(x - y))
-
 def loss_fn(model, x, y):
     y_pred = model(x)
-    return neg_logll(p_ll, y, y_pred) # + jnp.log(1/jnp.sqrt(2*jnp.pi)) - p_prior(model.params)/y.shape[0]
+    return neg_logll(likelihood, y, y_pred)
 
-@nnx.jit
-def train_step(model, optimizer, x, y):
-    loss, grads = nnx.value_and_grad(loss_fn)(model,x,y)
-    optimizer.update(grads) 
-    return loss
-
-
-# %%
-losses = []
-for epoch in range(n_epochs):
-    for x_tr, y_tr in train_loader:
-        losses.append(train_step(model, optimizer, x_tr, y_tr))
-
-    if epoch % 100 == 0:
-        print(f"[epoch {epoch}]: loss: {losses[-1]:.4f}")
-
-print(f'{optimizer.step.value = }')
-print(f"Final loss: {losses[-1]:.4f}")
+cfg = TrainCfg(
+    opt=optax.adam(1e-1), 
+    steps=1000, 
+    batch_size=X_train.shape[0],
+    verbose=True
+)
+loss_val = train(model, X_train.reshape(-1,1), y_train, loss_fn, cfg)
 
 # %%
-fig = plot_regression(model, X_test, y_test, X_train, y_train)
+fig = scatter(jnp.vstack((X_train, y_train)).T, color="blue", alpha=0.6, label="Training data")
+fig = scatter(jnp.vstack((X_test, y_test)).T, fig=fig, color="green", alpha=0.6, label="Test data")
+fig = plot(lambda x: jnp.sin(sinus_factor*x), fig=fig, range=[-2,2], color="black", linestyle="--", label="True function")
+fig = plot(model, fig=fig, range=[-2,2], color="red", label="Prediction")
 
 # %%
 from geometric_bayesian.densities import MultivariateNormal
