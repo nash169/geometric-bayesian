@@ -13,11 +13,13 @@ class LowRankOperator(LinearOperator):
         self,
         diag: Vector,
         right: Matrix,
-        left: Optional[Matrix] = None
+        left: Optional[Matrix] = None,
+        zero_tol: Scalar = 1e-8
     ) -> None:
         self.diag = diag
         self.right = right
         self.left = left if left is not None else self.right
+        self.zero_tol = zero_tol
 
     def size(self) -> Size:
         r"""
@@ -46,7 +48,7 @@ class LowRankOperator(LinearOperator):
         r"""
         Return solve of the linear operator
         """
-        inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
+        inv_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.reciprocal(self.diag))
         return self.right @ ((self.left.T @ vec) * inv_d)
         # return self.right @ ((self.left.T @ vec) / self.diag)
 
@@ -79,13 +81,14 @@ class LowRankOperator(LinearOperator):
     def inverse(
             self
     ) -> LinearOperator:
-        inv_d = jnp.where(self.diag == 0.0, 0.0, jnp.reciprocal(self.diag))
+        inv_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.reciprocal(self.diag))
         return LowRankOperator(diag=inv_d, right=self.right, left=self.left)
 
     def squareroot(
             self
     ) -> LinearOperator:
-        return LowRankOperator(diag=jnp.sqrt(self.diag), right=self.right, left=self.left)
+        sqrt_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.sqrt(self.diag))
+        return LowRankOperator(diag=sqrt_d, right=self.right, left=self.left)
 
     def topcut(
         self,
