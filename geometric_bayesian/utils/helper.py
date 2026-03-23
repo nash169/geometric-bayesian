@@ -105,7 +105,9 @@ def make_moons(n: int = 300, noise: float = 0.15, seed: int = 0):
     y = np.concatenate([np.zeros(n1), np.ones(n2)], axis=0)
     X = X + noise * rng.normal(size=X.shape)
     perm = rng.permutation(n)
-    return X[perm], y[perm]
+    X = jnp.asarray(X[perm], dtype=jnp.float64)
+    y = jnp.asarray(y[perm], dtype=jnp.float64).reshape(-1, 1)
+    return X, y
 
 
 def make_clusters(n: int = 30, m: int = 30, noise: float = 0.15, seed: int = 0):
@@ -120,16 +122,29 @@ def make_clusters(n: int = 30, m: int = 30, noise: float = 0.15, seed: int = 0):
     return X, y
 
 
-def make_sinusoid(n: int = 30, noise: float = 0.15, seed: int = 0):
-    X_1 = jax.random.multivariate_normal(jax.random.key(seed), jnp.array([-1, -1]), 0.2 * jnp.eye(2), shape=(n,))
-    y_1 = jnp.zeros(n)
-    X_2 = jax.random.multivariate_normal(jax.random.key(0), jnp.array([1, 1]), 0.2 * jnp.eye(2), shape=(m,))
-    y_2 = jnp.ones(m)
+def make_sinusoid(
+    n_train: int = 150,
+    n_valid: int = 50,
+    n_test: int = 100,
+    noise: float = 0.15,
+    interval: tuple = (-1.0, 1.0),
+    sinus_factor: float = 1.0,
+    seed: int = 0
+):
+    keys = jr.split(jr.key(seed), 6)
 
-    X = jnp.concatenate((X_1, X_2), axis=0)
-    y = jnp.concatenate((y_1, y_2))
+    X_train = jax.random.uniform(keys[0], minval=interval[0], maxval=-0.8, shape=(int(n_train / 3),))
+    X_train = jnp.append(X_train, jax.random.uniform(keys[0], minval=-0.1, maxval=0.1, shape=(int(n_train / 3),)))
+    X_train = jnp.append(X_train, jax.random.uniform(keys[0], minval=0.8, maxval=interval[1], shape=(n_train - X_train.shape[0],)))
+    y_train = jnp.sin(X_train * sinus_factor) + jr.normal(keys[1], X_train.shape) * noise
 
-    return X, y
+    X_valid = jax.random.uniform(keys[2], minval=interval[0], maxval=interval[1], shape=(n_valid,))
+    y_valid = jnp.sin(X_valid * sinus_factor) + jr.normal(keys[3], X_valid.shape) * noise
+
+    X_test = jax.random.uniform(keys[4], minval=interval[0], maxval=interval[1], shape=(n_test,))
+    y_test = jnp.sin(X_test * sinus_factor) + jr.normal(keys[5], X_test.shape) * noise
+
+    return X_train.reshape(-1, 1), y_train.reshape(-1, 1), X_valid.reshape(-1, 1), y_valid.reshape(-1, 1), X_test.reshape(-1, 1), y_test.reshape(-1, 1)
 
 
 def random_like(rng_key, x):
