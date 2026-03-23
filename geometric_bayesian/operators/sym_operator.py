@@ -40,6 +40,8 @@ class SymOperator(LinearOperator):
         if method == 'symeig':
             d, v = jnp.linalg.eigh(self.dense()._mat)
             d, v = jnp.flip(d), jnp.flip(v, axis=1)
+            if num_modes is not None:
+                d, v = d[:num_modes], v[:, :num_modes]
         elif method == 'lanczos':
             assert num_modes is not None
             key, subkey = jax.random.split(rng_key if rng_key is not None else jax.random.key(0))
