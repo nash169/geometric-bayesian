@@ -5,10 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "chex>=0.1.90",
     "flax>=0.10.5",
     "ipympl>=0.9.7",
-    "jax>=0.8.2; sys_platform == 'darwin'",
-    "jax[cuda13]>=0.8.2; sys_platform == 'linux'",
+    "jax>=0.8.2",
     "jaxtyping>=0.3.1",
     "jupyterlab>=4.4.0",
     "jupyterlab-nvdashboard>=0.13.0",
@@ -17,4 +17,9 @@ dependencies = [
     "optax>=0.2.4",
     "scikit-image>=0.25.2",
     "tqdm>=4.67.1",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "jax[cuda13]>=0.8.2",
 ]
