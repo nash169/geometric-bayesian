@@ -13,7 +13,7 @@ def integrate(
     dt: Optional[Float] = 0.01,
     T: Optional[Float] = 1.0,
     integrator: Optional[Callable] = ef,
-    key: Optional[Key] = None
+    key: Optional[Key] = None,
 ):
     assert integrator is not None and dt is not None and T is not None
 
@@ -22,10 +22,20 @@ def integrate(
         x, key = carry
         if key is not None:
             key, subkey = jax.random.split(key)
-        x = integrator(f=f if key is None else lambda t, x, u: f(t=t, x=x, u=u, key=subkey), t=t, x=carry[0], u=u, dt=dt)
-        return (x, key), (x, )
+        if u is not None:
+            u_c = u(t, x) if isinstance(u, Callable) else u[i]
+        else:
+            u_c = None
+        x = integrator(f=f if key is None else lambda t, x, u: f(t=t, x=x, u=u_c, key=subkey), t=t, x=carry[0], u=u_c, dt=dt)
+        return (x, key), (x,)
 
     return lambda x: jax.lax.scan(step, (x, key), jnp.arange(int(T / dt)))[1]
+
+    # def run(x):
+    #     history = jax.lax.scan(step, (x, key), jnp.arange(int(T / dt)))[1][0]
+    #     return (jnp.concatenate((jnp.expand_dims(x, axis=0), history), axis=0),)
+    #
+    # return run
 
 # def euler_forward(f, x, v, dt):
 #     vn = v + dt*f(x, v)
