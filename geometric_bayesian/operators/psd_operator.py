@@ -102,11 +102,12 @@ class PSDOperator(SymOperator):
 
     def lowrank(
         self,
+        zero_tol: Scalar = 1e-8,
         **kwargs
     ) -> LinearOperator:
         from geometric_bayesian.operators.low_rank_operator import LowRankOperator
         eigval, eigvec = self.diagonalize(**kwargs)
-        return LowRankOperator(diag=eigval, right=eigvec)
+        return LowRankOperator(diag=eigval, right=eigvec, zero_tol=zero_tol)
 
     def squareroot(
         self,
