@@ -5,7 +5,6 @@ import jax
 import jax.numpy as jnp
 
 from geometric_bayesian.utils.types import Callable, Optional
-from geometric_bayesian.operators.linear_operator import LinearOperator
 
 
 def christoffel_fk(
@@ -20,20 +19,28 @@ def christoffel_fk(
     Returns:
         Christoffel symbols first kind
     """
+
     def fn(x, v, u):
-        dg = jax.jacfwd(lambda x: jax.lax.map(lambda v: g(x, v), jnp.eye(len(x))))(x)
-        return jnp.einsum('mji,j->mi', dg, v) @ u - 0.5 * jnp.einsum('ijm,j->mi', dg, v) @ u
-        # return 0.5 * (jnp.einsum('mij,j->mi', dg, v) @ u + jnp.einsum('mji,j->mi', dg, v) @ u - jnp.einsum('ijm,j->mi', dg, v) @ u)
+        term_v = jax.jvp(lambda x: g(x, u), (x,), (v,))[1]
+        term_u = jax.jvp(lambda x: g(x, v), (x,), (u,))[1]
+        grad_term = jax.grad(lambda x: jnp.dot(u, g(x, v)))(x)
+        return 0.5 * (term_v + term_u - grad_term)
+
+    # def fn(x, v):
+    #     term = jax.jvp(lambda x: g(x, v), (x,), (v,))[1]
+    #     grad_term = jax.grad(lambda x: jnp.dot(v, g(x, v)))(x)
+    #     return term - 0.5 * grad_term
 
     return fn
 
 
 def christoffel_sk(
     g: Callable,
-    g_inv: Optional[Callable] = None
+    g_inv: Optional[Callable] = None,
+    **kwargs
 ) -> Callable:
     r"""
-    Calculate the christoffel symbols of the second kind (T_kij) given metric
+    Calculate the christoffel symbols of the second kind (T^k_ij) given metric
 
     Args:
         g: Metric
@@ -43,8 +50,7 @@ def christoffel_sk(
     """
     def fn(x, v, u):
         if g_inv is None:
-            return jax.scipy.sparse.linalg.cg(lambda v: g(x, v), christoffel_fk(g)(x, v, u))[0]
-        else:
-            return g_inv(x, christoffel_fk(g)(x, v, u))
+            return jax.scipy.sparse.linalg.cg(lambda v: g(x, v), christoffel_fk(g)(x, v, u), **kwargs)[0]
+        return g_inv(x, christoffel_fk(g)(x, v, u))
 
     return fn
