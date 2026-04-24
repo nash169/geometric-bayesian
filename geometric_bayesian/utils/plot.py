@@ -1,13 +1,10 @@
 """Plotting utilities."""
 
 from typing import Optional, Tuple
-import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import combinations
-
-from numpy import base_repr, isin
 
 from geometric_bayesian.utils.types import Callable, Vector
 
@@ -57,6 +54,7 @@ def scatter(
         data,
         ranges=None,
         axes_labels=None,
+        cbar=None,
         ax=None,
         fig=None,
         **kwargs
@@ -89,6 +87,9 @@ def scatter(
         ax.set_ylim(*ranges[1])
         if dim == 3:
             ax.set_zlim(*ranges[2])
+
+    if cbar is not None and fig is not None:
+        fig.colorbar(im, ax=ax, **cbar)
 
     return fig if fig is not None else ax
 
