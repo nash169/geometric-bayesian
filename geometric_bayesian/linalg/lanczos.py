@@ -1,81 +1,141 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Slightly modified version from: https://github.com/google/spectral-density/blob/8330354e55d42535b13b2e1c618f11904582355c/jax/lanczos.py
-# Main changes: 1) returns 1D array of main and lower/upper diagonal elements instead of tridiagonal matrix
-#               2) update to new jax syntax function array modification
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
+import jax
 import jax.numpy as jnp
-import jax.random as random
+import jax.random as jr
+
+from typing import Optional, Callable
+from jaxtyping import Array
 
 
-# TODO(gilmer) This function should use higher numerical precision?
-def lanczos(mv, dim, order, rng_key):
-    """Lanczos algorithm for tridiagonalizing a real symmetric matrix.
+def lanczos_tridiag(
+    mv: Callable[[Array], Array],
+    n: int,
+    *,
+    m: int = 64,
+    eps: float = 1e-12,
+    reorth: int = 1,
+    v0: Optional[Array] = None,
+    key: Optional[Array] = None,
+    dtype=jnp.float32,
+):
+    if v0 is None:
+        v0 = jr.normal(key if key is not None else jr.key(0), (n,), dtype=dtype)
+    else:
+        dtype = v0.dtype
+    v0 = v0 / jnp.maximum(jnp.linalg.norm(v0), eps)
 
-    This function applies Lanczos algorithm of a given order.  This function
-    does full reorthogonalization.
+    def step(carry, i):
+        vecs, beta = carry
 
-    WARNING: This function may take a long time to jit compile (e.g. ~3min for
-    order 90 and dim 1e7).
-
-    Args:
-      mv: Maps v -> Hv for a real symmetric matrix H.
-        Input/Output must be of shape [dim].
-      dim: Matrix H is [dim, dim].
-      order: An integer corresponding to the number of Lanczos steps to take.
-      rng_key: The jax PRNG key.
-
-    Returns:
-      d: main diagonal elements of the tridiagonal matrix of size (order)
-      e: lower/upper diagonal elements of the tridiagonal matrix of size (order - 1)
-      vecs: A numpy array of size (order, dim) corresponding to the Lanczos
-        vectors.
-    """
-
-    d, e = jnp.zeros(order), jnp.zeros(order-1)
-    vecs = jnp.zeros((order, dim))
-
-    init_vec = random.normal(rng_key, shape=(dim,))
-    init_vec = init_vec / jnp.linalg.norm(init_vec)
-    vecs = vecs.at[0].set(init_vec)
-
-    beta = 0
-    # TODO(gilmer): Better to use lax.fori loop for faster compile?
-    for i in range(order):
-        v = vecs[i, :].reshape((dim))
-        if i == 0:
-            v_old = 0
-        else:
-            v_old = vecs[i - 1, :].reshape((dim))
-
+        v = vecs[i]
         w = mv(v)
-        assert (w.shape[0] == dim and len(w.shape) == 1), ('Output of mv(v) must be of shape [dim].')
-        w = w - beta * v_old
+        assert w.shape[0] == n and len(w.shape) == 1, ("Output of mv(v) must be of shape [n].")
+
+        vprev = jax.lax.cond(i > 0, lambda j: vecs[j - 1], lambda _: jnp.zeros_like(v), i)
+        w = w - beta * vprev
 
         alpha = jnp.dot(w, v)
-        d = d.at[i].set(alpha)
         w = w - alpha * v
 
-        # Full Reorthogonalization
-        for j in range(i):
-            tau = vecs[j, :].reshape((dim))
-            coeff = jnp.dot(w, tau)
-            w += -coeff * tau
+        for _ in range(reorth):
+            coeffs = vecs @ w
+            w = w - vecs.T @ coeffs
 
         beta = jnp.linalg.norm(w)
+        vnext = jnp.where(beta > eps, w / beta, jnp.zeros_like(w))
 
-        # TODO(gilmer): The tf implementation raises an exception if beta < 1e-6
-        # here. However JAX cannot compile a function that has an if statement
-        # that depends on a dynamic variable. Should we still handle this base?
-        # beta being small indicates that the lanczos vectors are linearly
-        # dependent.
+        vecs = jax.lax.cond(i + 1 < m, lambda q: q.at[i + 1].set(vnext), lambda q: q, vecs)
 
-        if i + 1 < order:
-            e = e.at[i].set(beta)
-            vecs = vecs.at[i+1].set(w/beta)
+        return (vecs, beta), (alpha, beta)
 
-    return d, e, vecs
+    (vecs, _), (alpha, beta) = jax.lax.scan(step, (jnp.zeros((m, n), dtype=dtype).at[0].set(
+        v0), jnp.array(0.0, dtype=dtype)), jnp.arange(m))
+    return alpha, beta[:-1], vecs
+
+
+def lanczos_bidiag(
+    mv: Callable[[Array], Array],
+    rmv: Callable[[Array], Array],
+    shape: tuple[int, int],
+    *,
+    m: int = 64,
+    eps: float = 1e-12,
+    reorth: int = 1,
+    v0: Optional[Array] = None,
+    key: Optional[Array] = None,
+    dtype=jnp.float32,
+):
+    """
+    Golub-Kahan-Lanczos bidiagonalization for rectangular operators.
+
+    Args:
+      mv: Maps v -> A v for an operator A with shape ``shape``.
+      rmv: Maps u -> A.T u.
+      shape: Tuple ``(n_rows, n_cols)`` describing the operator.
+      m: Number of bidiagonalization steps.
+
+    Returns:
+      alpha: Main diagonal of the bidiagonal matrix, shape ``(m,)``.
+      beta: Superdiagonal of the bidiagonal matrix, shape ``(m,)``.
+      U: Left Lanczos vectors, shape ``(m, n_rows)``.
+      V: Right Lanczos vectors, shape ``(m + 1, n_cols)``.
+    """
+    n_rows, n_cols = shape
+
+    if v0 is None:
+        v0 = jr.normal(key if key is not None else jr.key(0), (n_cols,), dtype=dtype)
+    else:
+        dtype = v0.dtype
+        assert v0.shape == (n_cols,), ("Initial right vector v0 must be of shape [n_cols].")
+
+    assert m > 0, ("m must be positive.")
+    v0 = v0 / jnp.maximum(jnp.linalg.norm(v0), eps)
+
+    def step(i, state):
+        U, V, alpha, beta = state
+
+        v = V[i]
+        p = mv(v)
+        assert p.shape[0] == n_rows and len(p.shape) == 1, ("Output of mv(v) must be of shape [n_rows].")
+        p = jax.lax.cond(i > 0, lambda x: x - beta[i - 1] * U[i - 1], lambda x: x, p)
+
+        # U only has rows 0..i-1 populated at this point; later rows are zero.
+        for _ in range(reorth):
+            p = p - U.T @ (U @ p)
+
+        a = jnp.linalg.norm(p)
+        u = p * jnp.where(a > eps, 1.0 / a, 0.0)
+
+        U = U.at[i].set(u)
+        alpha = alpha.at[i].set(a.astype(dtype))
+
+        r = rmv(u)
+        assert r.shape[0] == n_cols and len(r.shape) == 1, ("Output of rmv(u) must be of shape [n_cols].")
+        r = r - a * v
+
+        # V has rows 0..i populated here; later rows are zero.
+        for _ in range(reorth):
+            r = r - V.T @ (V @ r)
+
+        b = jnp.linalg.norm(r)
+        v_next = r * jnp.where(b > eps, 1.0 / b, 0.0)
+
+        V = V.at[i + 1].set(v_next)
+        beta = beta.at[i].set(b.astype(dtype))
+        return U, V, alpha, beta
+
+    U, V, alpha, beta = jax.lax.fori_loop(
+        0,
+        m,
+        step,
+        (
+            jnp.zeros((m, n_rows), dtype=dtype),
+            jnp.zeros((m + 1, n_cols), dtype=dtype).at[0].set(v0),
+            jnp.zeros((m,), dtype=dtype),
+            jnp.zeros((m,), dtype=dtype),
+        ),
+    )
+
+    return alpha, beta, U, V
