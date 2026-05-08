@@ -102,9 +102,9 @@ def quiver(vecs, origin=None, ranges=None, fig=None, **kwargs):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') if dim == 3 else fig.add_subplot(111)
     if origin is not None:
-        ax.quiver(*origin, *vecs, **kwargs)
+        ax.quiver(*origin.T, *vecs.T, **kwargs)
     else:
-        ax.quiver(*jnp.zeros_like(vecs), *vecs, **kwargs)
+        ax.quiver(*jnp.zeros_like(vecs.T), *vecs.T, **kwargs)
     if ranges is not None:
         ax.set_xlim(*ranges[0])
         ax.set_ylim(*ranges[1])
