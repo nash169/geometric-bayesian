@@ -25,7 +25,7 @@ class LowRankOperator(LinearOperator):
         r"""
         Return size of the linear operator
         """
-        return jnp.array([self.right.shape[0], self.left.shape[0]])
+        return self.right.shape[0], self.left.shape[0]
 
     def transpose(
         self,

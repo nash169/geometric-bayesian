@@ -56,7 +56,7 @@ class PSDOperator(SymOperator):
         r"""
         Return size of the linear operator
         """
-        return jnp.array([self._op_size, self._op_size]) if isinstance(self._op, Callable) else jnp.array([self._op.shape[0], self._op.shape[1]])
+        return (self._op_size, self._op_size) if isinstance(self._op, Callable) else (self._op.shape[0], self._op.shape[1])
 
     def mv(self, vec: Vector) -> Vector:
         r"""

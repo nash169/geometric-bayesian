@@ -21,7 +21,7 @@ class DenseOperator(LinearOperator):
         r"""
         Return size of the linear operator
         """
-        return jnp.array([self._mat.shape[0], self._mat.shape[1]])
+        return self._mat.shape[0], self._mat.shape[1]
 
     def mv(self, vec: Vector) -> Vector:
         r"""

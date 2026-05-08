@@ -35,7 +35,7 @@ class DiagOperator(SymOperator):
         r"""
         Return size of the linear operator
         """
-        return jnp.array([self._dim, self._dim])
+        return self._dim, self._dim
 
     def mv(
         self,
