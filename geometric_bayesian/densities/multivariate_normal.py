@@ -44,6 +44,7 @@ class MultivariateNormal(AbstractDensity):
         self,
         size: Int = 1,
         seed: Int = 0,
+        key: Optional[Key] = None,
         **kwargs
     ):
         key = jax.random.key(seed)
