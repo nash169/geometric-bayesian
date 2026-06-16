@@ -84,11 +84,19 @@ class LowRankOperator(LinearOperator):
         inv_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.reciprocal(self.diag))
         return LowRankOperator(diag=inv_d, right=self.right, left=self.left, zero_tol=self.zero_tol)
 
-    def squareroot(
+    # square root
+    def sqrt(
             self
     ) -> LinearOperator:
         sqrt_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.sqrt(self.diag))
-        return LowRankOperator(diag=sqrt_d, right=self.right, left=self.left, zero_tol=self.zero_tol)
+        return LowRankOperator(diag=sqrt_d, right=self.right, left=self.left, zero_tol=self.zero_tol, jitter=self.jitter)
+
+    # square root factor
+    def sqrtf(
+            self
+    ) -> DenseOperator:
+        sqrt_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.sqrt(self.diag))
+        return DenseOperator(self.right * sqrt_d)
 
     def topcut(
         self,
@@ -103,8 +111,3 @@ class LowRankOperator(LinearOperator):
     ) -> Self:
         self.diag, self.right, self.left = self.diag[-num_modes:], self.right[:, -num_modes:], self.left[:, -num_modes:]
         return self
-
-    @property
-    def sqrt(self) -> Matrix:
-        sqrt_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.sqrt(self.diag))
-        return self.right * sqrt_d
