@@ -10,6 +10,7 @@ import jax
 import jax.numpy as jnp
 
 
+@jax.tree_util.register_pytree_node_class
 class DiagOperator(SymOperator):
     def __init__(
         self,
@@ -28,6 +29,13 @@ class DiagOperator(SymOperator):
             raise NotImplementedError(f"Type {type(diag)} not a valid diag operator.")
 
         self.diag = diag
+
+    def tree_flatten(self):
+        return (self.diag,), {"dim": self._dim}
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        return cls(diag=children[0], dim=aux["dim"])
 
     def size(
         self

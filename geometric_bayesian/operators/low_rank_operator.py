@@ -2,12 +2,14 @@
 # encoding: utf-8
 
 from geometric_bayesian.operators.dense_operator import DenseOperator
+import jax
 import jax.numpy as jnp
 
 from geometric_bayesian.operators.linear_operator import LinearOperator
 from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, Optional, Self
 
 
+@jax.tree_util.register_pytree_node_class
 class LowRankOperator(LinearOperator):
     def __init__(
         self,
@@ -21,6 +23,15 @@ class LowRankOperator(LinearOperator):
         self.right = right
         self.left = left if left is not None else self.right
         self.zero_tol = zero_tol
+        self.jitter = jitter
+
+    def tree_flatten(self):
+        return (self.diag, self.right, self.left), {"zero_tol": self.zero_tol}
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        diag, right, left = children
+        return cls(diag=diag, right=right, left=left, zero_tol=aux["zero_tol"])
 
     def size(self) -> Size:
         r"""

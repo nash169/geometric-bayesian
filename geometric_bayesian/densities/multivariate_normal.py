@@ -12,6 +12,7 @@ from geometric_bayesian.densities.abstract_density import AbstractDensity
 from geometric_bayesian.operators.linear_operator import LinearOperator
 
 
+@jax.tree_util.register_pytree_node_class
 class MultivariateNormal(AbstractDensity):
     def __init__(
         self,
@@ -29,6 +30,17 @@ class MultivariateNormal(AbstractDensity):
             assert isinstance(mean, Scalar) or isinstance(mean, Vector), "Mean can only be a Vector or Scalar."
             self._mean = mean
         assert isinstance(cov, LinearOperator)
+
+    def tree_flatten(self):
+        has_mean = hasattr(self, "_mean")
+        children = (self._cov, self._mean) if has_mean else (self._cov,)
+        return children, {"has_mean": has_mean}
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        if aux["has_mean"]:
+            return cls(cov=children[0], mean=children[1])
+        return cls(cov=children[0])
 
     def __call__(
         self,

@@ -1,18 +1,27 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import jax
 import jax.numpy as jnp
 
 from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix
 from geometric_bayesian.operators.linear_operator import LinearOperator
 
 
+@jax.tree_util.register_pytree_node_class
 class DenseOperator(LinearOperator):
     def __init__(
         self,
         mat: Matrix
     ) -> None:
         self._mat = mat
+
+    def tree_flatten(self):
+        return (self._mat,), None
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        return cls(children[0])
 
     def __call__(self, vec: Vector) -> Vector:
         return self.mv(vec)
@@ -42,6 +51,7 @@ class DenseOperator(LinearOperator):
         r"""
         Return solve of the linear operator
         """
+        assert self._mat.shape[0] == self._mat.shape[1], RuntimeError("Not valid operation for rectangular operators")
         return jnp.linalg.solve(self._mat, vec)
 
     def det(
