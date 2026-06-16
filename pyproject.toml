@@ -1,7 +1,7 @@
 [project]
 name = "geometric-bayesian"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Geometric Bayesian Inference"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -17,6 +17,7 @@ dependencies = [
     "optax>=0.2.4",
     "scikit-image>=0.25.2",
     "tqdm>=4.67.1",
+    "tueplots>=0.2.4",
 ]
 
 [project.optional-dependencies]
