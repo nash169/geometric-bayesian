@@ -47,9 +47,10 @@ class MultivariateNormal(AbstractDensity):
         key: Optional[Key] = None,
         **kwargs
     ):
-        key = jax.random.key(seed)
-        rv = jax.random.normal(key=key, shape=(self._cov.shape[0], ) if size == 1 else (self._cov.shape[0], size))
-        samples = self._cov.squareroot(**kwargs) @ rv
+        key = jax.random.key(seed) if key is None else key
+        cov_sqrt = self._cov.sqrtf(**kwargs)
+        rv = jax.random.normal(key=key, shape=(cov_sqrt.shape[1], ) if size == 1 else (cov_sqrt.shape[1], size))
+        samples = cov_sqrt @ rv
         if hasattr(self, "_mean"):
             samples += self._mean if size == 1 else self._mean[:, None]
         return samples
