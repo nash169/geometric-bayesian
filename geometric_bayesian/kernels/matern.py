@@ -11,7 +11,7 @@ def matern12(
     l: Scalar,
     tau: Scalar = 1.0,
 ):
-    return jnp.exp(tau) * jnp.exp(-jnp.abs(x - y) / jnp.exp(l))
+    return jnp.exp(tau) * jnp.exp(-jnp.linalg.norm(x - y) / jnp.exp(l))
 
 
 def matern32(
@@ -20,7 +20,7 @@ def matern32(
     l: Scalar,
     tau: Scalar = 1.0,
 ):
-    beta = jnp.sqrt(3) / jnp.exp(l) * jnp.abs(x - y)
+    beta = jnp.sqrt(3) / jnp.exp(l) * jnp.linalg.norm(x - y)
     return jnp.exp(tau) * (1 + beta) * jnp.exp(-beta)
 
 
@@ -30,5 +30,5 @@ def matern52(
     l: Scalar,
     tau: Scalar = 1.0,
 ):
-    beta = jnp.sqrt(5) / jnp.exp(l) * jnp.abs(x - y)
+    beta = jnp.sqrt(5) / jnp.exp(l) * jnp.linalg.norm(x - y)
     return jnp.exp(tau) * (1 + beta + beta**2 / 3) * jnp.exp(-beta)
