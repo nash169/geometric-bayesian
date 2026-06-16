@@ -99,10 +99,13 @@ class GP(nnx.Module):
         return lambda x: k_xy(x) @ prior_cov.solve(y)
 
     def posterior_cov(self, X):
+        prior_cov = PSDOperator(op=self.cov_fn(X), op_size=X.shape[0])
         k_xy = lambda x: jax.vmap(self.k_fn, in_axes=(None, 0))(x, X).squeeze()
         k_yx = lambda x: jax.vmap(self.k_fn, in_axes=(0, None))(X, x).squeeze()
-        prior_cov = PSDOperator(op=self.cov_fn(X), op_size=X.shape[0])
-        return lambda x: self.k_fn(x, x) - k_xy(x) @ prior_cov.solve(k_yx(x))
+        return lambda x, y: self.k_fn(x, y) - k_xy(x) @ prior_cov.solve(k_yx(y))
+
+    def posterior_var(self, X):
+        return lambda x: self.posterior_cov(X)(x, x)
 
     def __call__(self, x: Vector, y: Vector):
         return self.prior(x)(y)
