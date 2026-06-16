@@ -14,7 +14,8 @@ class LowRankOperator(LinearOperator):
         diag: Vector,
         right: Matrix,
         left: Optional[Matrix] = None,
-        zero_tol: Scalar = 1e-8
+        zero_tol: Scalar = 1e-8,
+        jitter: Optional[Scalar] = None
     ) -> None:
         self.diag = diag
         self.right = right
@@ -33,13 +34,16 @@ class LowRankOperator(LinearOperator):
         r"""
         Return transposed matrix-vector multiplication of the linear operator
         """
-        return LowRankOperator(self.diag, self.left, self.right)
+        return LowRankOperator(diag=self.diag, right=self.left, left=self.right, zero_tol=self.zero_tol, jitter=self.jitter)
 
     def mv(self, vec: Vector) -> Vector:
         r"""
         Return matrix-vector multiplication of the linear operator
         """
-        return self.right @ ((self.left.T @ vec) * self.diag)
+        res = self.right @ ((self.left.T @ vec) * self.diag)
+        if self.jitter is not None:
+            res += self.jitter * (vec - self.right @ (self.left.T @ vec))
+        return res
 
     def solve(
         self,
@@ -49,7 +53,10 @@ class LowRankOperator(LinearOperator):
         Return solve of the linear operator
         """
         inv_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.reciprocal(self.diag))
-        return self.right @ ((self.left.T @ vec) * inv_d)
+        res = self.right @ ((self.left.T @ vec) * inv_d)
+        if self.jitter is not None:
+            res += (vec - self.right @ (self.left.T @ vec)) / self.jitter
+        return res
         # return self.right @ ((self.left.T @ vec) / self.diag)
 
     def logdet(
@@ -82,7 +89,8 @@ class LowRankOperator(LinearOperator):
             self
     ) -> LinearOperator:
         inv_d = jnp.where(self.diag <= self.zero_tol, 0.0, jnp.reciprocal(self.diag))
-        return LowRankOperator(diag=inv_d, right=self.right, left=self.left, zero_tol=self.zero_tol)
+        # return LowRankOperator(diag=inv_d, right=self.right, left=self.left, zero_tol=self.zero_tol)
+        return LowRankOperator(diag=jnp.flip(inv_d), right=jnp.flip(self.right, axis=1), left=jnp.flip(self.left, axis=1), zero_tol=self.zero_tol, jitter=self.jitter if self.jitter is None else 1 / self.jitter)
 
     # square root
     def sqrt(
