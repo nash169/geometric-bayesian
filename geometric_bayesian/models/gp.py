@@ -90,6 +90,9 @@ class GP(nnx.Module):
             mean=self.mu_fn(x) if hasattr(self, "mean") else None,
         )
 
+    def __call__(self, x: Vector, y: Vector):
+        return self.prior(x)(y)
+
     def posterior_mu(self, X, y):
         k_xy = lambda x: jax.vmap(self.k_fn, in_axes=(None, 0))(x, X).squeeze()
         prior_cov = PSDOperator(op=self.cov_fn(X), op_size=X.shape[0])
@@ -106,9 +109,6 @@ class GP(nnx.Module):
 
     def posterior_var(self, X):
         return lambda x: self.posterior_cov(X)(x, x)
-
-    def __call__(self, x: Vector, y: Vector):
-        return self.prior(x)(y)
 
     @property
     def params(self) -> Vector:
