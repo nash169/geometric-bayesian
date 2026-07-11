@@ -99,7 +99,12 @@ class DiagOperator(SymOperator):
         """
         return vec.T @ (vec / self.diag)
 
-    def squareroot(
+    def sqrt(
             self
     ) -> LinearOperator:
         return DiagOperator(diag=jnp.sqrt(self.diag), dim=self._dim)
+
+    def sqrtf(
+            self
+    ) -> LinearOperator:
+        return self.sqrt()
