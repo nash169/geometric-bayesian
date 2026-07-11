@@ -29,7 +29,11 @@ def integrate(
         x = integrator(f=f if key is None else lambda t, x, u: f(t=t, x=x, u=u_c, key=subkey), t=t, x=carry[0], u=u_c, dt=dt)
         return (x, key), (x,)
 
-    return lambda x: jax.lax.scan(step, (x, key), jnp.arange(int(T / dt)))[1]
+    def run(x):
+        history = jax.lax.scan(step, (x, key), jnp.arange(int(round(T / dt))))[1][0]
+        return (jnp.concatenate((jnp.expand_dims(x, axis=0), history), axis=0),)
+
+    return run
 
     # def run(x):
     #     history = jax.lax.scan(step, (x, key), jnp.arange(int(T / dt)))[1][0]
