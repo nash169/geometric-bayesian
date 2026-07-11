@@ -17,21 +17,26 @@ class LowRankOperator(LinearOperator):
         right: Matrix,
         left: Optional[Matrix] = None,
         zero_tol: Scalar = 1e-8,
-        jitter: Optional[Scalar] = None
+        jitter: Optional[Scalar] = None,
+        njitter: Optional[Scalar] = None
     ) -> None:
         self.diag = diag
         self.right = right
         self.left = left if left is not None else self.right
         self.zero_tol = zero_tol
         self.jitter = jitter
+        self.njitter = njitter
 
     def tree_flatten(self):
-        return (self.diag, self.right, self.left), {"zero_tol": self.zero_tol}
+        # jitter/njitter must be children (not aux): they may be traced values,
+        # and dropping them would silently strip the jitter term from any
+        # operator carried through jit/scan/cond
+        return (self.diag, self.right, self.left, self.jitter, self.njitter), {"zero_tol": self.zero_tol}
 
     @classmethod
     def tree_unflatten(cls, aux, children):
-        diag, right, left = children
-        return cls(diag=diag, right=right, left=left, zero_tol=aux["zero_tol"])
+        diag, right, left, jitter, njitter = children
+        return cls(diag=diag, right=right, left=left, zero_tol=aux["zero_tol"], jitter=jitter, njitter=njitter)
 
     def size(self) -> Size:
         r"""
