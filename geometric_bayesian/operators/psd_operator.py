@@ -10,6 +10,7 @@ from geometric_bayesian.operators.linear_operator import LinearOperator
 from geometric_bayesian.operators import DenseOperator, SymOperator
 
 
+@jax.tree_util.register_pytree_node_class
 class PSDOperator(SymOperator):
     def __init__(
         self,
@@ -51,6 +52,22 @@ class PSDOperator(SymOperator):
             mat = mat + mat.T + 100 * jnp.eye(op_size)
             self._op = jnp.linalg.cholesky(mat)
             self._op_is_tril = True
+
+    def tree_flatten(self):
+        if isinstance(self._op, Callable):
+            raise TypeError(
+                "callable-backed PSDOperator is not a valid pytree; materialize it "
+                "(e.g. via `.dense()`) before passing it through jit/scan boundaries"
+            )
+        return (self._op,), {"op_is_tril": self._op_is_tril}
+
+    @classmethod
+    def tree_unflatten(cls, aux, children):
+        obj = cls.__new__(cls)
+        obj._op = children[0]
+        obj._op_is_tril = aux["op_is_tril"]
+        obj._op_size = getattr(children[0], "shape", (None,))[0]
+        return obj
 
     def size(self) -> VectorInt:
         r"""
@@ -110,7 +127,7 @@ class PSDOperator(SymOperator):
         eigval, eigvec = self.diagonalize(**kwargs)
         return LowRankOperator(diag=eigval, right=eigvec, zero_tol=zero_tol, jitter=jitter)
 
-    def squareroot(
+    def sqrtf(
         self,
         **kwargs
     ) -> LinearOperator:
