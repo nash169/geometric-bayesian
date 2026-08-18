@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import jax.numpy as jnp
-from geometric_bayesian.utils.types import Vector, Float, Optional, Scalar
+from bayax.utils.types import Vector, Float, Optional, Scalar
 
 
 def periodic(

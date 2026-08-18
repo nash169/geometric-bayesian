@@ -5,12 +5,12 @@ import jax
 import jax.numpy as jnp
 import inspect
 from functools import wraps
-from geometric_bayesian.utils.types import Callable, Matrix
-from geometric_bayesian.densities.abstract_density import AbstractDensity
+from bayax.utils.types import Callable, Matrix
+from bayax.densities.abstract_density import AbstractDensity
 
 from flax import nnx
-from geometric_bayesian.utils.helper import wrap_pytree_function
-from geometric_bayesian.utils.types import Optional, Int
+from bayax.utils.helper import wrap_pytree_function
+from bayax.utils.types import Optional, Int
 
 
 def mc(

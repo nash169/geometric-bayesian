@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 import jax.random as jr
 
-from geometric_bayesian.utils.types import Callable, Optional
+from bayax.utils.types import Callable, Optional
 
 
 def integrate(

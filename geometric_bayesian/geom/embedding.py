@@ -3,8 +3,8 @@
 
 import jax
 
-from geometric_bayesian.utils.types import Callable, Optional
-from geometric_bayesian.operators.linear_operator import LinearOperator
+from bayax.utils.types import Callable, Optional
+from bayax.operators.linear_operator import LinearOperator
 
 
 def pullmetric(

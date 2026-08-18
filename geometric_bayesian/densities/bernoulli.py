@@ -4,7 +4,7 @@
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Int, Scalar, Tuple
+from bayax.utils.types import Int, Scalar, Tuple
 
 
 class Bernoulli:

@@ -3,7 +3,7 @@
 
 import jax
 import jax.numpy as jnp
-from geometric_bayesian.utils.types import Scalar, Optional, Tuple, Int
+from bayax.utils.types import Scalar, Optional, Tuple, Int
 
 
 class Normal:

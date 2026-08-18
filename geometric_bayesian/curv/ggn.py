@@ -4,8 +4,8 @@
 import jax
 from flax import nnx
 
-from geometric_bayesian.utils.types import VectorFn, Vector, Matrix, PyTree, Callable, Float, Optional
-from geometric_bayesian.functions.likelihood import neg_logll_hvp
+from bayax.utils.types import VectorFn, Vector, Matrix, PyTree, Callable, Float, Optional
+from bayax.functions.likelihood import neg_logll_hvp
 
 
 def ggn(

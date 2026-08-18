@@ -33,10 +33,10 @@ if os.path.basename(REPO_ROOT) == "examples":
 sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, os.path.join(REPO_ROOT, "examples"))
 
-from geometric_bayesian.kernels import rbf
-from geometric_bayesian.models import MLP, GP
-from geometric_bayesian.utils.helper import array_to_pytree, pytree_to_array, gradient_check, hessian_check, random_like
-from geometric_bayesian.utils.types import Vector, Float, Optional, Scalar
+from bayax.kernels import rbf
+from bayax.models import MLP, GP
+from bayax.utils.helper import array_to_pytree, pytree_to_array, gradient_check, hessian_check, random_like
+from bayax.utils.types import Vector, Float, Optional, Scalar
 
 
 # %%
@@ -81,9 +81,11 @@ mlp = MLP(layers=[3, 4, 1], seed=0)
 x_mlp = jr.uniform(jr.key(0), (3,))
 y_mlp = jr.uniform(jr.key(1), (1,))
 
+
 def mlp_loss(m, x, y):
     pred = m(x)
     return jnp.sum((pred - y) ** 2)
+
 
 _run_case("MLP", mlp_loss, mlp, x_mlp, y_mlp)
 
@@ -91,8 +93,10 @@ gp = GP(dim=3, kernel=rbf, mean=MLP(layers=[3, 4, 1], seed=0), seed=0)
 x_gp = jr.uniform(jr.key(2), (3, 3))
 y_gp = jr.uniform(jr.key(3), (3,))
 
+
 def gp_loss(m, x, y):
     return m(x, y)
+
 
 _run_case("GP", gp_loss, gp, x_gp, y_gp)
 

@@ -6,8 +6,8 @@ import jax
 import jax.numpy as jnp
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from geometric_bayesian.utils.types import ScalarInt, Scalar, Vector, Optional, Tuple
-from geometric_bayesian.operators.linear_operator import LinearOperator
+from bayax.utils.types import ScalarInt, Scalar, Vector, Optional, Tuple
+from bayax.operators.linear_operator import LinearOperator
 
 
 class Categorical:

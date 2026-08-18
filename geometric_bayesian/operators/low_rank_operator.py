@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from geometric_bayesian.operators.dense_operator import DenseOperator
+from bayax.operators.dense_operator import DenseOperator
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, Optional, Self
+from bayax.operators.linear_operator import LinearOperator
+from bayax.utils.types import Size, Scalar, Vector, Matrix, Optional, Self
 
 
 @jax.tree_util.register_pytree_node_class

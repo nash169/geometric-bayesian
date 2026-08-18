@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from geometric_bayesian.integrate.integrate import integrate
-from geometric_bayesian.integrate.ef import ef
-from geometric_bayesian.integrate.em import em
-from geometric_bayesian.integrate.ode23 import ode23
-from geometric_bayesian.integrate.ode45 import ode45
+from bayax.integrate.integrate import integrate
+from bayax.integrate.ef import ef
+from bayax.integrate.em import em
+from bayax.integrate.ode23 import ode23
+from bayax.integrate.ode45 import ode45
 
 __all__ = [
     "integrate",

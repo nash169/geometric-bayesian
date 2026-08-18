@@ -7,9 +7,9 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import ScalarLike
 
-from geometric_bayesian.utils.types import Scalar, Vector, Matrix, Key, Int
-from geometric_bayesian.densities.abstract_density import AbstractDensity
-from geometric_bayesian.operators.linear_operator import LinearOperator
+from bayax.utils.types import Scalar, Vector, Matrix, Key, Int
+from bayax.densities.abstract_density import AbstractDensity
+from bayax.operators.linear_operator import LinearOperator
 
 
 @jax.tree_util.register_pytree_node_class

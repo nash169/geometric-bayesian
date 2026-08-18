@@ -5,9 +5,9 @@ import jax
 import jax.numpy as jnp
 from jax.scipy.sparse.linalg import cg
 
-from geometric_bayesian.utils.types import Scalar, Vector, Matrix, Optional, Callable, Array, VectorInt
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.operators import DenseOperator, SymOperator
+from bayax.utils.types import Scalar, Vector, Matrix, Optional, Callable, Array, VectorInt
+from bayax.operators.linear_operator import LinearOperator
+from bayax.operators import DenseOperator, SymOperator
 
 
 @jax.tree_util.register_pytree_node_class
@@ -123,7 +123,7 @@ class PSDOperator(SymOperator):
         jitter: Optional[Scalar] = None,
         **kwargs
     ) -> LinearOperator:
-        from geometric_bayesian.operators.low_rank_operator import LowRankOperator
+        from bayax.operators.low_rank_operator import LowRankOperator
         eigval, eigvec = self.diagonalize(**kwargs)
         return LowRankOperator(diag=eigval, right=eigvec, zero_tol=zero_tol, jitter=jitter)
 
@@ -133,10 +133,10 @@ class PSDOperator(SymOperator):
     ) -> LinearOperator:
         if isinstance(self._op, Callable):
             if self._op_size <= 100:
-                from geometric_bayesian.operators import DenseOperator
+                from bayax.operators import DenseOperator
                 return DenseOperator(jnp.linalg.cholesky(self.dense()._mat))
             else:
                 return self.lowrank().squareroot()
         else:
-            from geometric_bayesian.operators import DenseOperator
+            from bayax.operators import DenseOperator
             return DenseOperator(self._op)

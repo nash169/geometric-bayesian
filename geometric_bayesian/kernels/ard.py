@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import jax.numpy as jnp
-from geometric_bayesian.utils.types import Vector, Scalar
+from bayax.utils.types import Vector, Scalar
 
 
 def ard(

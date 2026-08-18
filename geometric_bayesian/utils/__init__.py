@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from geometric_bayesian.utils.plot import (
+from bayax.utils.plot import (
     plot,
     scatter,
     quiver,
     contour,
     surf,
+    ctx_tueplots_style,
+    use_tueplots_style,
 )
 
-from geometric_bayesian.utils.math import (
+from bayax.utils.math import (
     gram
 )
 
-from geometric_bayesian.utils.train import (
+from bayax.utils.train import (
     OptCfg,
     TrainCfg,
     train

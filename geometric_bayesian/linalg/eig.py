@@ -5,8 +5,8 @@
 import jax
 import jax.numpy as jnp
 import jax.scipy.linalg as jsp
-from geometric_bayesian.utils.types import Optional, Callable, Array, Tuple, Vector, Matrix
-from geometric_bayesian.linalg.lanczos import lanczos_tridiag
+from bayax.utils.types import Optional, Callable, Array, Tuple, Vector, Matrix
+from bayax.linalg.lanczos import lanczos_tridiag
 from jax.experimental.sparse.linalg import lobpcg_standard
 
 

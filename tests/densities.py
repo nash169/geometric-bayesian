@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from functools import partial
 
 sys.path.insert(0, os.path.abspath(os.path.join('../')))
-from geometric_bayesian.utils.types import Array
-from geometric_bayesian.densities import Bernoulli, Normal, MultivariateNormal, Categorical
-from geometric_bayesian.operators.psd_operator import PSDOperator
+from bayax.utils.types import Array
+from bayax.densities import Bernoulli, Normal, MultivariateNormal, Categorical
+from bayax.operators.psd_operator import PSDOperator
 
 jax.config.update('jax_enable_x64', True)
 rng_key = jax.random.key(0)

@@ -5,10 +5,10 @@ import jax
 import jax.numpy as jnp
 from flax import nnx
 
-from geometric_bayesian.utils.types import Size, List, Optional, Callable, Array, Int, Vector
-from geometric_bayesian.utils.helper import pytree_to_array, array_to_pytree, wrap_pytree_function
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.utils.math import outer_jacobian, inner_jacobian
+from bayax.utils.types import Size, List, Optional, Callable, Array, Int, Vector
+from bayax.utils.helper import pytree_to_array, array_to_pytree, wrap_pytree_function
+from bayax.operators.linear_operator import LinearOperator
+from bayax.utils.math import outer_jacobian, inner_jacobian
 
 
 class MLP(nnx.Module):

@@ -3,8 +3,8 @@
 
 import jax
 
-from geometric_bayesian.utils.types import Callable, Optional
-from geometric_bayesian.operators import PSDOperator
+from bayax.utils.types import Callable, Optional
+from bayax.operators import PSDOperator
 
 
 def brownian(

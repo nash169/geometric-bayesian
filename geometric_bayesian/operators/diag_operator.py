@@ -2,9 +2,9 @@
 # encoding: utf-8
 
 from typing import Self
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.operators.sym_operator import SymOperator
-from geometric_bayesian.utils.types import Size, Scalar, Array, Vector, Matrix, Optional
+from bayax.operators.linear_operator import LinearOperator
+from bayax.operators.sym_operator import SymOperator
+from bayax.utils.types import Size, Scalar, Array, Vector, Matrix, Optional
 
 import jax
 import jax.numpy as jnp
@@ -70,7 +70,7 @@ class DiagOperator(SymOperator):
         r"""
         Return dense matrix representation of the linear operator
         """
-        from geometric_bayesian.operators.dense_operator import DenseOperator
+        from bayax.operators.dense_operator import DenseOperator
         return DenseOperator(jnp.diag(self.diag) if isinstance(self.diag, Vector) else self.diag * jnp.eye(self._dim))
 
     def logdet(

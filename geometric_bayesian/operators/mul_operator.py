@@ -3,7 +3,7 @@
 # encoding: utf-8
 
 from typing import Self
-from geometric_bayesian.utils.types import Size, Scalar, Array, Vector, Matrix
+from bayax.utils.types import Size, Scalar, Array, Vector, Matrix
 from .linear_operator import LinearOperator
 
 import jax

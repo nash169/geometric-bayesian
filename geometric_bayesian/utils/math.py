@@ -3,9 +3,9 @@ import jax
 from jax._src.dtypes import dtype
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Callable, Optional, PyTree, Tensor
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.utils.helper import pytree_to_array, array_to_pytree
+from bayax.utils.types import Callable, Optional, PyTree, Tensor
+from bayax.operators.linear_operator import LinearOperator
+from bayax.utils.helper import pytree_to_array, array_to_pytree
 
 
 def hvp(

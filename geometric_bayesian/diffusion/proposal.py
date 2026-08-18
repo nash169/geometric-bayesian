@@ -1,5 +1,5 @@
-from geometric_bayesian.densities import MultivariateNormal
-from geometric_bayesian.operators import ScaledOperator
+from bayax.densities import MultivariateNormal
+from bayax.operators import ScaledOperator
 
 
 def proposal(f, t, x, u, dt):

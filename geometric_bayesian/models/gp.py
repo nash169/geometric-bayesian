@@ -7,16 +7,16 @@ import jax.numpy as jnp
 from flax import nnx
 import inspect
 
-from geometric_bayesian.utils.types import (
+from bayax.utils.types import (
     Matrix,
     Optional,
     Callable,
     Vector,
 )
-from geometric_bayesian.operators import PSDOperator
-from geometric_bayesian.utils.math import gram
-from geometric_bayesian.densities import MultivariateNormal
-from geometric_bayesian.utils.helper import (
+from bayax.operators import PSDOperator
+from bayax.utils.math import gram
+from bayax.densities import MultivariateNormal
+from bayax.utils.helper import (
     pytree_to_array,
     array_to_pytree,
     wrap_pytree_function,

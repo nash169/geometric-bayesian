@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from geometric_bayesian.kernels.rbf import rbf
-from geometric_bayesian.kernels.ard import ard
-from geometric_bayesian.kernels.periodic import periodic
-from geometric_bayesian.kernels.matern import *
+from bayax.kernels.rbf import rbf
+from bayax.kernels.ard import ard
+from bayax.kernels.periodic import periodic
+from bayax.kernels.matern import *
 
 
 _all_ = [

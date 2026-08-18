@@ -4,8 +4,8 @@
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Size, Scalar, Vector, Matrix, Optional
-from geometric_bayesian.operators.linear_operator import LinearOperator
+from bayax.utils.types import Size, Scalar, Vector, Matrix, Optional
+from bayax.operators.linear_operator import LinearOperator
 
 
 @jax.tree_util.register_pytree_node_class
@@ -93,6 +93,6 @@ class DenseOperator(LinearOperator):
         jitter: Optional[Scalar] = None,
         **kwargs
     ) -> LinearOperator:
-        from geometric_bayesian.operators.low_rank_operator import LowRankOperator
+        from bayax.operators.low_rank_operator import LowRankOperator
         left, vals, right = jnp.linalg.svd(self._mat, **kwargs)
         return LowRankOperator(diag=vals, right=left, left=right, zero_tol=zero_tol, jitter=jitter)

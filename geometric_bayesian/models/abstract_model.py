@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import jax
 from flax import nnx
 
-from geometric_bayesian.utils.types import Vector, Matrix
+from bayax.utils.types import Vector, Matrix
 
 
 class AbstractModel(ABC, nnx.Module):

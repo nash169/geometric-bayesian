@@ -4,7 +4,7 @@
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Callable, Optional
+from bayax.utils.types import Callable, Optional
 
 
 def christoffel_fk(

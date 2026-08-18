@@ -5,7 +5,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 from abc import ABC, abstractmethod
-from geometric_bayesian.utils.types import Array, Self, Scalar, Vector, Matrix, VectorInt, Num, Optional, Int, Key, Tuple
+from bayax.utils.types import Array, Self, Scalar, Vector, Matrix, VectorInt, Num, Optional, Int, Key, Tuple
 
 
 class AbstractDensity(ABC):

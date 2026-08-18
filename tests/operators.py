@@ -3,7 +3,7 @@
 
 import jax
 import jax.numpy as jnp
-from geometric_bayesian.operators import PSDOperator
+from bayax.operators import PSDOperator
 
 
 class bcolors:

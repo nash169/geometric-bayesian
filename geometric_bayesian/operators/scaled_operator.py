@@ -4,10 +4,10 @@
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.operators.dense_operator import DenseOperator
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.operators.low_rank_operator import LowRankOperator
-from geometric_bayesian.utils.types import Scalar, Size, Vector, Matrix
+from bayax.operators.dense_operator import DenseOperator
+from bayax.operators.linear_operator import LinearOperator
+from bayax.operators.low_rank_operator import LowRankOperator
+from bayax.utils.types import Scalar, Size, Vector, Matrix
 
 
 @jax.tree_util.register_pytree_node_class

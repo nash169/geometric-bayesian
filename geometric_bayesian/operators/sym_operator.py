@@ -2,8 +2,8 @@
 # encoding: utf-8
 
 import jax.numpy as jnp
-from geometric_bayesian.operators.linear_operator import LinearOperator
-from geometric_bayesian.utils.types import Scalar, Vector, Matrix
+from bayax.operators.linear_operator import LinearOperator
+from bayax.utils.types import Scalar, Vector, Matrix
 
 
 class SymOperator(LinearOperator):
@@ -14,7 +14,7 @@ class SymOperator(LinearOperator):
         return self
 
     def diagonalize(self, **kwargs) -> tuple[Vector, Matrix]:
-        from geometric_bayesian.linalg.eig import eigh
+        from bayax.linalg.eig import eigh
         return eigh(self, self.shape[0], **kwargs)
 
     def logdet(

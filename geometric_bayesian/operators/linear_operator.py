@@ -5,7 +5,7 @@ import warnings
 import jax
 import jax.numpy as jnp
 from abc import ABC, abstractmethod
-from geometric_bayesian.utils.types import Array, Self, Scalar, Vector, Matrix, VectorInt
+from bayax.utils.types import Array, Self, Scalar, Vector, Matrix, VectorInt
 
 
 class LinearOperator(ABC):
@@ -58,7 +58,7 @@ class LinearOperator(ABC):
         Return dense matrix representation of the linear operator
         """
         warnings.warn("Default `dense` methods.")
-        from geometric_bayesian.operators.dense_operator import DenseOperator
+        from bayax.operators.dense_operator import DenseOperator
         return DenseOperator(self(jnp.eye(self.size()[1])))
 
     def diag(
@@ -70,7 +70,7 @@ class LinearOperator(ABC):
         r"""
         Return solve of the linear operator
         """
-        from geometric_bayesian.utils.math import diag_exact, diag_hutch, diag_hutchpp
+        from bayax.utils.math import diag_exact, diag_hutch, diag_hutchpp
         warnings.warn("Default `diag` method.")
 
         m, n = self.size()
@@ -180,7 +180,7 @@ class LinearOperator(ABC):
         other
     ):
         if isinstance(other, LinearOperator):
-            from geometric_bayesian.operators.sum_operator import SumOperator
+            from bayax.operators.sum_operator import SumOperator
             return SumOperator(self, other)
         else:
             raise NotImplementedError(f"Addition not supported for type {type(other)}")
@@ -190,7 +190,7 @@ class LinearOperator(ABC):
             other
     ):
         if isinstance(other, LinearOperator):
-            from geometric_bayesian.operators.mul_operator import MulOperator
+            from bayax.operators.mul_operator import MulOperator
             return MulOperator(self, other)
         else:
             raise NotImplementedError(f"Multiplication not supported for type {type(other)}")

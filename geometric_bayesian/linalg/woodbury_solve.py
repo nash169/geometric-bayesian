@@ -8,7 +8,7 @@ from __future__ import print_function
 import jax
 import jax.numpy as jnp
 
-from geometric_bayesian.utils.types import Vector, Matrix, Scalar
+from bayax.utils.types import Vector, Matrix, Scalar
 
 
 def woodbury_solve(

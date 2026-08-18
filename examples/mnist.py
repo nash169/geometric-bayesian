@@ -83,7 +83,7 @@ test_loader_ood = DataLoader(test_ood, batch_size=BATCH_SIZE, shuffle=False, col
 # ## Find MAP
 
 # %%
-from geometric_bayesian.models import MLP
+from bayax.models import MLP
 model = MLP(
     layers=LAYER_SIZES,
     prob=False,
@@ -91,10 +91,10 @@ model = MLP(
 )
 
 # %%
-from geometric_bayesian.densities import Bernoulli, MultivariateNormal
-from geometric_bayesian.functions.likelihood import neg_logll
-from geometric_bayesian.operators import DiagOperator
-from geometric_bayesian.utils.helper import pytree_to_array, array_to_pytree
+from bayax.densities import Bernoulli, MultivariateNormal
+from bayax.functions.likelihood import neg_logll
+from bayax.operators import DiagOperator
+from bayax.utils.helper import pytree_to_array, array_to_pytree
 
 p_ll = lambda f: Bernoulli(f, logits=True)
 
@@ -140,9 +140,9 @@ print(f"Final loss: {losses[-1]:.5f}")
 # ## Posterior
 
 # %%
-from geometric_bayesian.curv.ggn import ggn
-from geometric_bayesian.utils.helper import wrap_pytree_function, pytree_to_array, array_to_pytree
-from geometric_bayesian.operators import PSDOperator
+from bayax.curv.ggn import ggn
+from bayax.utils.helper import wrap_pytree_function, pytree_to_array, array_to_pytree
+from bayax.operators import PSDOperator
 
 mini_batch: dict[str, Array] = next(iter(train_loader))
 graph_def, map_params = nnx.split(model)
@@ -191,8 +191,8 @@ test_laplax = full_flatten(ggn_mv(map_params))
 jnp.allclose(test_laplax, ggn_op(pytree_to_array(map_params)))
 
 # %%
-from geometric_bayesian.densities import MultivariateNormal
-from geometric_bayesian.approx.mc import pred_posterior_mean, pred_posterior_std, pred_posterior
+from bayax.densities import MultivariateNormal
+from bayax.approx.mc import pred_posterior_mean, pred_posterior_std, pred_posterior
 
 posterior = MultivariateNormal(cov=cov_op, mean=pytree_to_array(map_params))
 params_samples = posterior.sample(size=100, num_modes=150, method='lobpcg')

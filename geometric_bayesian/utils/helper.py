@@ -6,7 +6,7 @@ import jax.random as jr
 import inspect
 
 from collections.abc import Generator
-from geometric_bayesian.utils.types import (
+from bayax.utils.types import (
     Matrix,
     PyTree,
     List,
@@ -148,7 +148,7 @@ def make_sinusoid(
 
 
 def random_like(rng_key, x):
-    from geometric_bayesian.operators import PSDOperator
+    from bayax.operators import PSDOperator
     if isinstance(x, jax.Array):
         return jax.random.uniform(jax.random.split(rng_key)[1], shape=x.shape)
     elif isinstance(x, PSDOperator):

@@ -4,7 +4,7 @@
 from collections.abc import Callable
 import jax
 
-from geometric_bayesian.utils.types import Vector
+from bayax.utils.types import Vector
 
 
 def neg_logll(
