@@ -1,7 +1,7 @@
 [project]
-name = "geometric-bayesian"
+name = "bayax"
 version = "1.0.0"
-description = "Geometric Bayesian Inference"
+description = "Geometric Bayesian Arena"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
