@@ -7,8 +7,6 @@ from bayax.utils.plot import (
     quiver,
     contour,
     surf,
-    ctx_tueplots_style,
-    use_tueplots_style,
 )
 
 from bayax.utils.math import (

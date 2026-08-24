@@ -149,6 +149,50 @@ wheels = [
 ]
 
 [[package]]
+name = "bayax"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "chex" },
+    { name = "flax" },
+    { name = "ipympl" },
+    { name = "jax" },
+    { name = "jaxtyping" },
+    { name = "jupyterlab" },
+    { name = "jupyterlab-nvdashboard" },
+    { name = "jupytext" },
+    { name = "matplotlib" },
+    { name = "optax" },
+    { name = "scikit-image" },
+    { name = "tqdm" },
+    { name = "tueplots" },
+]
+
+[package.optional-dependencies]
+gpu = [
+    { name = "jax", extra = ["cuda13"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "chex", specifier = ">=0.1.90" },
+    { name = "flax", specifier = ">=0.10.5" },
+    { name = "ipympl", specifier = ">=0.9.7" },
+    { name = "jax", specifier = ">=0.10.0" },
+    { name = "jax", extras = ["cuda13"], marker = "extra == 'gpu'", specifier = ">=0.10.0" },
+    { name = "jaxtyping", specifier = ">=0.3.1" },
+    { name = "jupyterlab", specifier = ">=4.4.0" },
+    { name = "jupyterlab-nvdashboard", specifier = ">=0.13.0" },
+    { name = "jupytext", specifier = ">=1.19.1" },
+    { name = "matplotlib", specifier = ">=3.10.1" },
+    { name = "optax", specifier = ">=0.2.4" },
+    { name = "scikit-image", specifier = ">=0.25.2" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "tueplots", specifier = ">=0.2.4" },
+]
+provides-extras = ["gpu"]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -624,50 +668,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/d5/7d/5df2650c57d47c572
 wheels = [
     { url = "https://files.pythonhosted.org/packages/01/c9/97cc5aae1648dcb851958a3ddf73ccd7dbe5650d95203ecb4d7720b4cdbf/fsspec-2026.1.0-py3-none-any.whl", hash = "sha256:cb76aa913c2285a3b49bdd5fc55b1d7c708d7208126b60f2eb8194fe1b4cbdcc", size = 201838, upload-time = "2026-01-09T15:21:34.041Z" },
 ]
-
-[[package]]
-name = "geometric-bayesian"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "chex" },
-    { name = "flax" },
-    { name = "ipympl" },
-    { name = "jax" },
-    { name = "jaxtyping" },
-    { name = "jupyterlab" },
-    { name = "jupyterlab-nvdashboard" },
-    { name = "jupytext" },
-    { name = "matplotlib" },
-    { name = "optax" },
-    { name = "scikit-image" },
-    { name = "tqdm" },
-    { name = "tueplots" },
-]
-
-[package.optional-dependencies]
-gpu = [
-    { name = "jax", extra = ["cuda13"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "chex", specifier = ">=0.1.90" },
-    { name = "flax", specifier = ">=0.10.5" },
-    { name = "ipympl", specifier = ">=0.9.7" },
-    { name = "jax", specifier = ">=0.10.0" },
-    { name = "jax", extras = ["cuda13"], marker = "extra == 'gpu'", specifier = ">=0.10.0" },
-    { name = "jaxtyping", specifier = ">=0.3.1" },
-    { name = "jupyterlab", specifier = ">=4.4.0" },
-    { name = "jupyterlab-nvdashboard", specifier = ">=0.13.0" },
-    { name = "jupytext", specifier = ">=1.19.1" },
-    { name = "matplotlib", specifier = ">=3.10.1" },
-    { name = "optax", specifier = ">=0.2.4" },
-    { name = "scikit-image", specifier = ">=0.25.2" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "tueplots", specifier = ">=0.2.4" },
-]
-provides-extras = ["gpu"]
 
 [[package]]
 name = "h11"
@@ -1841,9 +1841,9 @@ name = "nvidia-cuda-nvcc"
 version = "13.1.115"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cuda-crt", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-cuda-runtime", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-nvvm", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cuda-crt" },
+    { name = "nvidia-cuda-runtime" },
+    { name = "nvidia-nvvm" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/11/31a1141e63dcb64ddedd056f2c454a9503e91674890dd4913e4be0b515f6/nvidia_cuda_nvcc-13.1.115-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:ae46f71ea6f377e7719c1084ae8ca28d4e88770ee4436478c366c15f1fcfdebe", size = 34717342, upload-time = "2026-01-13T22:34:02.133Z" },
@@ -1873,7 +1873,7 @@ name = "nvidia-cudnn-cu13"
 version = "9.19.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cublas" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/79/df64c9d12d68df4372e2e45f77611e290dc87a6df973a4ef600d8c77f566/nvidia_cudnn_cu13-9.19.1.2-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:d2901fcdc526f661c1973cd302888f129b5b3c9eb5b99f7238947fb5758564c0", size = 433782417, upload-time = "2026-02-24T20:33:50.684Z" },
@@ -1885,7 +1885,7 @@ name = "nvidia-cufft"
 version = "12.1.0.78"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5c/87/787185b85241dc3d1bdbd20f2d315425836127d25b312a7e65ee839530cf/nvidia_cufft-12.1.0.78-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:639f60e802ace75277178148bc14bc17c6d1ec1f133cd81557c3e06ab70bf951", size = 226093383, upload-time = "2026-01-13T22:40:51.441Z" },
@@ -1897,9 +1897,9 @@ name = "nvidia-cusolver"
 version = "12.0.9.81"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-cusparse", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-nvjitlink", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cublas" },
+    { name = "nvidia-cusparse" },
+    { name = "nvidia-nvjitlink" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/57/01/b897eca0b6ba57eaf2ecb9f743549a06a6d520dae8c603262d1c164cae81/nvidia_cusolver-12.0.9.81-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:124e9ade619124f4a4a946dd63814d0cfc7b4738d9f34639b83f4d7c323e1eb9", size = 224479825, upload-time = "2026-01-13T22:43:45.06Z" },
@@ -1911,7 +1911,7 @@ name = "nvidia-cusparse"
 version = "12.7.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/98/b8/fbd4b324799fd8afb79642d5374ba7ab3eee0927257607f6b0631754f5bd/nvidia_cusparse-12.7.3.1-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:c2cbabfe12fb58bfbd24fe2aa1b85a945900769eafc03cd788c5e19481f2a751", size = 170069494, upload-time = "2026-01-13T22:45:01.012Z" },
@@ -1950,7 +1950,7 @@ name = "nvidia-nvshmem-cu13"
 version = "3.5.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cuda-cccl", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cuda-cccl" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/48/55705c0a9c6c5cfed0fcc4729d001570b36e3ff4b19bb8516c1c5b767890/nvidia_nvshmem_cu13-3.5.21-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:b6c2f7dc8c8f3084e0a23e495b020a30c6cbaf4e1674500860bcb65c79a8cb3d", size = 72192841, upload-time = "2026-02-27T00:20:16.542Z" },

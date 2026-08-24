@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import combinations
 
-from geometric_bayesian.utils.types import Callable, Vector
+from bayax.utils.types import Callable, Vector
 
 
 def plot(
